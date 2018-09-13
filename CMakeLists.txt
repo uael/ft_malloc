@@ -83,5 +83,6 @@ macro(wow NAME)
   endif ()
 endmacro()
 
-wow(libft_malloc
+wow(ft_malloc
+  ${__SRC_DIR}/ualloc.c
   ${__SRC_DIR}/malloc.c)
