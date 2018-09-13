@@ -30,6 +30,7 @@ ifneq ($(DEBUG),)
   CFLAGS += -g3 -O0
   ifneq ($(ASAN),)
   	CFLAGS += -fsanitize=address
+  	LDFLAGS += -fsanitize=address
   	TARGET_SUFFIX = .san
   else
     TARGET_SUFFIX = .dev
@@ -94,3 +95,6 @@ fclean: clean
 	@$(RM) -f $(TARGET_BIN)
 
 re: fclean all
+
+norm:
+	@norminette $(shell echo "{include,src}/**.[ch]")

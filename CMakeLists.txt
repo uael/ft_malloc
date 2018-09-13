@@ -86,3 +86,6 @@ endmacro()
 wow(ft_malloc
   ${__SRC_DIR}/ualloc.c
   ${__SRC_DIR}/malloc.c)
+
+add_executable(wow test/wow.c)
+target_link_libraries(wow ft_malloc)

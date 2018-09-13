@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ualloc.h                                           :+:      :+:    :+:   */
+/*   ualloc.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,26 +10,12 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef UALLOC_H
-# define UALLOC_H
+#include "ualloc.h"
 
-# include <stdlib.h>
-
-struct			s_ualloc_mapper
+int main(int ac, char *av[])
 {
-	int			page_size;
-	size_t		span_size;
-
-	void		*(*map)(size_t size, size_t *off);
-	void		(*unmap)(void *addr, size_t size, size_t off, size_t release);
-};
-
-extern void		ualloc_init(const struct s_ualloc_mapper *mapper);
-extern void		ualloc_destroy(void);
-
-extern void		ufree(void *ptr);
-extern void		*umalloc(size_t size) __attribute__((__malloc__));
-extern void		*ucalloc(size_t num, size_t size) __attribute__((__malloc__));
-extern void		*urealloc(void *ptr, size_t size) __attribute__((__malloc__));
-
-#endif
+	ualloc_init(NULL);
+	
+	ualloc_destroy();
+	return 0;
+}
