@@ -1,16 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ualloc.c                                           :+:      :+:    :+:   */
+/*   io/fputc.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 1970/01/01 00:00:42 by alucas-           #+#    #+#             */
-/*   Updated: 1970/01/01 00:00:42 by alucas-          ###   ########.fr       */
+/*   Created: 2018/02/25 00:42:42 by alucas-           #+#    #+#             */
+/*   Updated: 2018/02/25 00:42:42 by alucas-          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "config.h"
+#include "internal.h"
 
-#include <string.h>
-#include <unistd.h>
+int	ft_fputc(t_stream *f, int c)
+{
+	return ((int)fwritex(f, (const uint8_t *)&c, 1));
+}

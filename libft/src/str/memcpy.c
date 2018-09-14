@@ -1,16 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ualloc.c                                           :+:      :+:    :+:   */
+/*   str/memcpy.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 1970/01/01 00:00:42 by alucas-           #+#    #+#             */
-/*   Updated: 1970/01/01 00:00:42 by alucas-          ###   ########.fr       */
+/*   Created: 2017/11/07 09:44:14 by alucas-           #+#    #+#             */
+/*   Updated: 2017/11/08 14:29:11 by alucas-          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "config.h"
+#include "libft/str.h"
 
-#include <string.h>
-#include <unistd.h>
+inline void	*ft_memcpy(void *dst, void const *src, size_t n)
+{
+	void *d;
+
+	d = dst;
+	while (n)
+	{
+		*(uint8_t *)dst++ = *(uint8_t const *)src++;
+		--n;
+	}
+	return (d);
+}

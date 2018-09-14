@@ -1,16 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ualloc.c                                           :+:      :+:    :+:   */
+/*   ft_clean.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 1970/01/01 00:00:42 by alucas-           #+#    #+#             */
-/*   Updated: 1970/01/01 00:00:42 by alucas-          ###   ########.fr       */
+/*   Created: 2017/11/07 09:52:30 by alucas-           #+#    #+#             */
+/*   Updated: 2017/11/23 14:39:14 by null             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "config.h"
+#include "libft/lib.h"
 
-#include <string.h>
-#include <unistd.h>
+inline void	ft_clean(void *ptr)
+{
+	ft_pfree((void **)ptr);
+}
+
+inline int	ft_free(void *ptr, int code)
+{
+	if (ptr)
+		free(ptr);
+	return (code);
+}

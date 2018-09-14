@@ -1,16 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ualloc.c                                           :+:      :+:    :+:   */
+/*   libft/ds.h                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 1970/01/01 00:00:42 by alucas-           #+#    #+#             */
-/*   Updated: 1970/01/01 00:00:42 by alucas-          ###   ########.fr       */
+/*   Created: 2017/11/07 09:52:30 by alucas-           #+#    #+#             */
+/*   Updated: 2017/11/15 18:51:38 by null             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "config.h"
+#ifndef LIBFT_DS_H
+# define LIBFT_DS_H
 
-#include <string.h>
-#include <unistd.h>
+# include "ds/deq.h"
+# include "ds/lst.h"
+# include "ds/map.h"
+# include "ds/sds.h"
+# include "ds/set.h"
+# include "ds/vec.h"
+
+#endif
