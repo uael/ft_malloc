@@ -60,10 +60,9 @@ extern int				upush(t_upool pool);
 /*
 ** Pop a memory pool and revert to the previous context.
 ** The last call of `upop` will result on a pool release (eq. `urelease`).
-** @param pool    [in] Memory pool to push
 ** @return             0 on success, -1 with errno set otherwise
 */
-extern int				upop(t_upool pool);
+extern int				upop(void);
 
 /*
 ** Allocate `sz` new memory.
@@ -119,9 +118,8 @@ extern int				uref(void *ptr);
 /*
 ** Un-reference a memory pointer.
 ** @param ptr     [in] Memory pointer to un-reference
-** @return             0 on success, -1 with errno set otherwise
 */
-extern void				*ufree(void *ptr);
+extern void				ufree(void *ptr);
 
 /*
 ** Retrieve the memory pointer size.

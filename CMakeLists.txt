@@ -84,6 +84,7 @@ macro(wow NAME)
 endmacro()
 
 wow(ft_malloc
+  ${__SRC_DIR}/pool.c
   ${__SRC_DIR}/ualloc.c
   ${__SRC_DIR}/malloc.c)
 

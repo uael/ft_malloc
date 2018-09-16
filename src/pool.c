@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ualloc.c                                           :+:      :+:    :+:   */
+/*   pool.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,39 +10,29 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ualloc.h"
+#include "pool.h"
 
-#include <assert.h>
-#include <string.h>
+#include <unistd.h>
+#include <errno.h>
 
-uint8_t g_mem[128 * 1024];
+struct s_upool	g_pools[MAX_POOL];
 
-int main(int ac, char *av[])
+int				ustack(void *mem, size_t sz, t_upool *pool)
 {
-	t_upool pool;
-	void *ptr, *ptr2;
-	void *ptrs[60];
-	unsigned i;
+	unsigned pool_id;
 
-	ustack(g_mem, sizeof(g_mem), &pool);
-
-	ptr = ualloc(pool, 67);
-	memset(ptr, 'a', usize(ptr));
-	ufree(ptr);
-	ptr2 = ualloc(pool, 68);
-	memset(ptr2, 'a', usize(ptr2));
-	ufree(ptr2);
-	assert(ptr == ptr2);
-
-	for (i = 0; i < 60; ++i)
+	pool_id = 0;
+	while (pool_id < MAX_POOL && g_pools[pool_id].free)
+		++pool_id;
+	if (pool_id == MAX_POOL)
 	{
-		ptrs[i] = ualloc(pool, i * i);
-		assert(i * i == usize(ptrs[i]));
-		memset(ptrs[i], 'a', usize(ptrs[i]));
+		errno = ENOMEM;
+		return (-1);
 	}
-
-	while (i)
-		ufree(ptrs[--i]);
-
+	g_pools[pool_id].memory = mem;
+	g_pools[pool_id].size = sz;
+	g_pools[pool_id].free = mem;
+	g_pools[pool_id].free->size = (uint32_t)(sz - sizeof(struct s_uptr));
+	*pool = g_pools + pool_id;
 	return 0;
 }
