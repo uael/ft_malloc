@@ -96,7 +96,9 @@ void					bin_dyn_freeall(t_bin *bin)
 {
 	if (!bin)
 		return;
+	pthread_mutex_lock(&bin->lock);
 	if (bin->head)
 		bin_dyn_free(bin);
+	pthread_mutex_unlock(&bin->lock);
 	return (bin_dyn_freeall(bin->next));
 }

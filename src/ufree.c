@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ualloc.c                                           :+:      :+:    :+:   */
+/*   ufree.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -13,15 +13,16 @@
 #include "pool.h"
 
 #include <errno.h>
-#include <libft.h>
-#include <sys/mman.h>
-
-
 
 int			uref(void *ptr)
 {
 	t_chunk	*chk;
 
+	if (!ptr)
+	{
+		errno = EINVAL;
+		return -1;
+	}
 	chk = (t_chunk *)ptr - 1;
 	if (!chk->refc)
 	{
@@ -36,6 +37,8 @@ void		ufree(void *ptr)
 {
 	t_chunk	*chk;
 
+	if (!ptr)
+		return;
 	chk = (t_chunk *)ptr - 1;
 	bin_free(chunk_bin(chk), chk);
 }
@@ -44,6 +47,8 @@ size_t		usize(void *ptr)
 {
 	t_chunk	*chk;
 
+	if (!ptr)
+		return (0);
 	chk = (t_chunk *)ptr - 1;
 	return (chunk_size(chk));
 }

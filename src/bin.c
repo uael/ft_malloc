@@ -97,20 +97,27 @@ int				bin_resize(t_bin *bin, t_chunk *chk, size_t nsz)
 {
 	t_chunk	*nxt;
 	size_t	chsz;
+	int		ret;
 
+	ret = 0;
 	chsz = chunk_size(chk);
 	nsz = (nsz + sizeof(t_chunk) - 1) & -sizeof(t_chunk);
-	if (chsz > nsz + sizeof(t_chunk))
+	pthread_mutex_lock(&bin->lock);
+	if (chsz < nsz)
 	{
-		trim(bin, chk, nsz);
-		return (0);
+		nxt = chunk_nxt(chk, bin);
+		if (nxt->refc || (chunk_size(nxt) + sizeof(t_chunk) + chsz) < nsz)
+			ret = -1;
+		else
+		{
+			nxt = chunk_nxt(nxt, bin);
+			chk->nxt = nxt->off;
+			nxt->prv = chk->off;
+			chsz = chunk_size(chk);
+		}
 	}
-	if (chsz >= nsz)
-		return (0);
-	nxt = chunk_nxt(chk, bin);
-	if (nxt->refc || (chunk_size(nxt) + sizeof(t_chunk) + chsz) < nsz)
-		return (1);
-	chk->nxt = nxt->off;
-	nxt->prv = chk->off;
-	return (0);
+	if (!ret && chsz > nsz + sizeof(t_chunk))
+		trim(bin, chk, nsz);
+	pthread_mutex_unlock(&bin->lock);
+	return (ret);
 }

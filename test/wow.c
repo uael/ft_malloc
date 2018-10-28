@@ -213,5 +213,27 @@ int main(int ac, char *av[])
 
 	dump_pool(g_stdout, pool);
 
+	ptr[1] = ualloc(pool, 10);
+
+	dump_pool(g_stdout, pool);
+
+	ptr[1] = urealloc(pool, ptr[1], 20);
+	dump_pool(g_stdout, pool);
+
+	ptr[1] = urealloc(pool, ptr[1], 30);
+	dump_pool(g_stdout, pool);
+
+	ptr[1] = urealloc(pool, ptr[1], 40);
+	dump_pool(g_stdout, pool);
+
+	ptr[2] = ualloc(pool, 64);
+	dump_pool(g_stdout, pool);
+
+	ptr[1] = urealloc(pool, ptr[1], 50);
+	dump_pool(g_stdout, pool);
+
+	urelease(pool);
+	dump_pool(g_stdout, pool);
+
 	return 0;
 }
