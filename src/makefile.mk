@@ -5,3 +5,4 @@ SRC += src/class.c
 SRC += src/pool.c
 SRC += src/ualloc.c
 SRC += src/ufree.c
+SRC += src/malloc.c

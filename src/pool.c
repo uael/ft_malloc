@@ -16,7 +16,7 @@
 
 static t_pool			g_pools[MAX_POOL];
 static t_pool			g_heap_dft_stack;
-static pthread_mutex_t	pool_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t	g_pool_lock = PTHREAD_MUTEX_INITIALIZER;
 
 t_pool					*g_heap_dft = &g_heap_dft_stack;
 
@@ -26,18 +26,18 @@ static t_pool			*pool_slot(enum e_pool kind)
 	t_pool		*pool;
 
 	i = 0;
-	pthread_mutex_lock(&pool_lock);
+	pthread_mutex_lock(&g_pool_lock);
 	while (i < MAX_POOL && g_pools[i].kind)
 		++i;
 	if (i == MAX_POOL)
 	{
 		errno = ENOMEM;
-		pthread_mutex_unlock(&pool_lock);
+		pthread_mutex_unlock(&g_pool_lock);
 		return (NULL);
 	}
 	pool = g_pools + i;
 	pool->kind = kind;
-	pthread_mutex_unlock(&pool_lock);
+	pthread_mutex_unlock(&g_pool_lock);
 	return (pool);
 }
 

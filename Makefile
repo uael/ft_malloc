@@ -87,6 +87,7 @@ $(BUILD_PATH)/%.o: %.c $(MAKE_DEPS)
 $(TARGET_BIN): $(addprefix $(BUILD_PATH)/,$(SRC:.c=.o))
 	@echo "  LD      $(notdir $@)"
 	$(V)$(LD) $^ $(LDFLAGS) $(addprefix -l,$(LDLIBS)) -shared -o $@
+	@ln -sf $(TARGET_BIN) libft_malloc.so
 
 clean:
 	@$(RM) -rf $(BUILD_DIR)
