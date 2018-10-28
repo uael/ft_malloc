@@ -13,6 +13,7 @@
 #include "pool.h"
 
 #include <errno.h>
+#include <malloc.h>
 
 int			uref(t_pool *pool, void *ptr)
 {
@@ -78,10 +79,8 @@ size_t		usize(t_pool *pool, void *ptr)
 		pthread_mutex_unlock(&pool->lock);
 		return (0);
 	}
-	if (chk->lrg)
-		ret = bin->size - sizeof(t_bin) - sizeof(t_chunk);
-	else
-		ret = chunk_size(chk);
+	ret = chk->lrg ? bin->size - sizeof(t_bin) - sizeof(t_chunk)
+				   : chunk_size(chk);
 	pthread_mutex_unlock(&pool->lock);
 	return (ret);
 }

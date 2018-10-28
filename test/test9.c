@@ -8,26 +8,26 @@
 # include "malloc.h"
 #endif
 
-static char *array[64 * 256];
+static char *array[1024 * 1024];
 
 int		main(void)
 {
 	size_t i;
 
 	i = 0;
-	while (i < 64 * 256)
+	while (i < 1024 * 1024)
 	{
 		array[i] = calloc(i, 1);
 		i++;
 	}
 	i = 0;
-	while (i < 64 * 256)
+	while (i < 1024 * 1024)
 	{
 		array[i] = realloc(array[i], (i) + 10);
 		i++;
 	}
 	i = 0;
-	while (i < 64 * 256)
+	while (i < 1024 * 1024)
 	{
 		free(array[i]);
 		i++;

@@ -34,7 +34,13 @@ void	*realloc(void *ptr, size_t sz)
 
 void	*reallocf(void *ptr, size_t sz)
 {
-	return (urealloc(NULL, ptr, sz));
+	void *tmp;
+
+	tmp = realloc(ptr, sz);
+    if (tmp)
+    	return (tmp);
+    free(ptr);
+    return (NULL);
 }
 
 void	*calloc(size_t nb, size_t sz)

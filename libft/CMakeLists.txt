@@ -207,7 +207,7 @@ else ()
 			$<$<CONFIG:San>:-fno-omit-frame-pointer>)
 	target_compile_options(libft
 		PRIVATE
-			-Wall -Werror -Wextra
+			-Wall -Werror -Wextra -fPIC
 			-ansi -fomit-frame-pointer
 			-Wno-missing-field-initializers
 			$<$<CONFIG:Debug>:-g3 -O0>

@@ -10,16 +10,11 @@ fi
 
 nm libft_malloc.so | grep -E 'free|alloc'
 
-for i in 0 1 2 3 3_bis 4 5 6 7 8 9; do
-    clang -Wall -Wextra -Iinclude -pthread -o "build/test$i" "test/test$i.c" $RELOU_FLAG -L. -lft_malloc \
-        && clang -pthread -o "build/ctrl$i" "test/test$i.c" -D CTRL \
-#        && diff -y \
-#                <(./run.sh /usr/bin/time "$TIME_FLAG" "./build/test$i" 2>&1) \
-#                <(/usr/bin/time "$TIME_FLAG" "./build/ctrl$i" 2>&1)
+for i in 0 1 2 3 3_bis 4 6 8; do
+    clang -Wall -Wextra -Iinclude -pthread -o "build/test$i" "test/test$i.c" $RELOU_FLAG
 done
-
-PAGE_TEST0="$(./run.sh /usr/bin/time $TIME_FLAG ./build/test0 2>&1 | grep 'page rec' | cut -dp -f1)"
-PAGE_TEST1="$(./run.sh /usr/bin/time $TIME_FLAG ./build/test1 2>&1 | grep 'page rec' | cut -dp -f1)"
-echo "$PAGE_TEST1 - $PAGE_TEST0" | bc
+for i in 5 7 9; do
+    clang -Wall -Wextra -Iinclude -pthread -L. -lft_malloc -o "build/test$i" "test/test$i.c" $RELOU_FLAG
+done
 
 exit 0 # eheh

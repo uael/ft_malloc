@@ -105,3 +105,6 @@ target_include_directories(test1 PRIVATE include)
 add_executable(test9 test/test9.c)
 target_link_libraries(test9 PUBLIC ft_malloc)
 
+add_executable(test8 test/test8.c)
+target_link_libraries(test8 PUBLIC ft_malloc)
+

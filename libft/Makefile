@@ -10,8 +10,6 @@
 #                                                                              #
 # **************************************************************************** #
 
-.DEFAULT_GOAL := libft.a
-
 # ------------------------------------------------------------------------------
 # Configuration
 # ------------------------------------------------------------------------------
@@ -21,13 +19,22 @@ MAKE_DEPS = Makefile
 CC=gcc
 LD=gcc
 
+CFLAGS += -fPIC
+
 ifneq ($(DEBUG),)
   CONFIG = debug
-  CFLAGS += -g -O0
-  TARGET_SUFFIX = -debug
+  CFLAGS += -g3 -O0
+  ifneq ($(ASAN),)
+  	CFLAGS += -fsanitize=address
+  	LDFLAGS += -fsanitize=address
+  	TARGET_SUFFIX = .san
+  else
+    TARGET_SUFFIX = .dev
+  endif
 else
   CONFIG = release
-  CFLAGS += -O3 -Wall -Werror -Wextra
+  CFLAGS += -flto -O3 -Wall -Werror -Wextra
+  LDFLAGS += -flto
 endif
 
 BUILD_DIR = build
@@ -46,6 +53,7 @@ MAKE_DEPS += src/makefile.mk
 
 TARGET_LIB := $(TARGET)$(TARGET_SUFFIX).a
 all: $(TARGET_LIB)
+.DEFAULT_GOAL := $(TARGET_LIB)
 
 # ------------------------------------------------------------------------------
 # Rules
@@ -70,6 +78,6 @@ clean:
 	@$(RM) -rf $(BUILD_DIR)
 
 fclean: clean
-	@$(RM) -f $(TARGET_BIN)
+	@$(RM) -f $(TARGET_LIB)
 
 re: fclean all
