@@ -23,7 +23,7 @@ static int		bin_mmap(t_bin **pbin, t_bin **bhd,
 	uint16_t	tail;
 
 	sz = class == CLASS_LARGE
-		? (sz + sizeof(t_bin) + sizeof(t_chunk) - 1) & -sizeof(t_chunk)
+		? (sz + sizeof(t_bin) + (2 * sizeof(t_chunk)) - 1) & -sizeof(t_chunk)
 		: ((size_t)(1 << class) * MIN_ALLOC);
 	mem = mmap(NULL, sz, PROT_READ | PROT_WRITE,
 		MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -42,7 +42,7 @@ static int		bin_mmap(t_bin **pbin, t_bin **bhd,
 	{
 		tail = (uint16_t)(((bin->size - sizeof(t_bin)) / sizeof(t_chunk)) - 1);
 		bin->tail = bin->head + tail;
-		*bin->tail = (t_chunk){ .off = tail };
+		*bin->tail = (t_chunk){ .off = tail, .rfc = 1 };
 		*bin->head = (t_chunk){ .nxt = tail };
 	}
 	return 0;
@@ -117,18 +117,21 @@ static t_chunk	*find_alloc(t_bin *bin, uintptr_t ptr, t_bin **pbin)
 
 t_chunk			*bin_fnd(int lrg, t_bin *bin, uintptr_t ptr, t_bin **pbin)
 {
-	if (!bin)
-		return (NULL);
-	if (ptr >= (uintptr_t)bin && ptr <= ((uintptr_t)bin + bin->size))
+	while (1)
 	{
-		if (lrg)
+		if (!bin)
+			return (NULL);
+		if (ptr >= (uintptr_t)bin && ptr <= ((uintptr_t)bin + bin->size))
 		{
-			*pbin = bin;
-			return (bin->head);
+			if (lrg)
+			{
+				*pbin = bin;
+				return (bin->head);
+			}
+			return (find_alloc(bin, ptr, pbin));
 		}
-		return (find_alloc(bin, ptr, pbin));
+		bin = bin->next;
 	}
-	return (bin_fnd(lrg, bin->next, ptr, pbin));
 }
 
 t_chunk			*bin_find(struct s_pool *pool, void *ptr, t_bin **pbin)

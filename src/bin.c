@@ -37,6 +37,8 @@ static void		trim(t_bin *bin, t_chunk *chk, size_t sz)
 	*nxt = (t_chunk){ .nxt = chk->nxt, .prv = chk->off,
 		.off = (uint16_t)(nxt - bin->head) };
 	chk->nxt = nxt->off;
+	chk = chunk_nxt(nxt, bin);
+	chk->prv = nxt->off;
 }
 
 void			*bin_flat_alloc(t_bin *bin, size_t sz)

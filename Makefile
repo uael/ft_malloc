@@ -39,7 +39,8 @@ ifneq ($(DEBUG),)
   endif
 else
   CONFIG = release
-  CFLAGS += -O3 -fpic -Wall -Werror -Wextra
+  CFLAGS += -flto -O3 -Wall -Werror -Wextra
+  LDFLAGS += -flto
 endif
 
 BUILD_DIR = build
