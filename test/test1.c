@@ -2,6 +2,7 @@
 # include <stdlib.h>
 #else
 # include "malloc.h"
+# include "ualloc.h"
 #endif
 
 int		main()

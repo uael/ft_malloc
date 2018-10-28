@@ -100,19 +100,19 @@ extern void				*uzrealloc(t_upool pool, void *ptr, size_t sz);
 ** @param ptr     [in] Memory pointer to reference
 ** @return             0 on success, -1 with errno set otherwise
 */
-extern int				uref(void *ptr);
+extern int				uref(t_upool pool, void *ptr);
 
 /*
 ** Un-reference a memory pointer.
 ** @param ptr     [in] Memory pointer to un-reference
 */
-extern void				ufree(void *ptr);
+extern void				ufree(t_upool pool, void *ptr);
 
 /*
 ** Retrieve the memory pointer size.
 ** @param ptr     [in] Memory pointer
 ** @return             Pointer total size
 */
-extern size_t			usize(void *ptr);
+extern size_t			usize(t_upool pool, void *ptr);
 
 #endif

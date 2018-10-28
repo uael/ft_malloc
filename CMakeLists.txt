@@ -90,7 +90,18 @@ wow(ft_malloc
   ${__SRC_DIR}/bin.c
   ${__SRC_DIR}/bin_dyn.c
   ${__SRC_DIR}/ufree.c
+  ${__SRC_DIR}/malloc.c
   ${__SRC_DIR}/ualloc.c)
 
 add_executable(wow test/wow.c)
-target_link_libraries(wow ft_malloc)
+target_link_libraries(wow PUBLIC ft_malloc)
+
+add_executable(test0 test/test0.c)
+target_include_directories(test0 PRIVATE include)
+
+add_executable(test1 test/test1.c)
+target_include_directories(test1 PRIVATE include)
+
+add_executable(test9 test/test9.c)
+target_link_libraries(test9 PUBLIC ft_malloc)
+

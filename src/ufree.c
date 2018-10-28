@@ -14,41 +14,74 @@
 
 #include <errno.h>
 
-int			uref(void *ptr)
+int			uref(t_pool *pool, void *ptr)
 {
 	t_chunk	*chk;
+	t_bin	*bin;
 
-	if (!ptr)
+	if (!ptr || (size_t)ptr % sizeof(t_chunk))
 	{
 		errno = EINVAL;
-		return -1;
+		return (-1);
 	}
-	chk = (t_chunk *)ptr - 1;
-	if (!chk->refc)
+	if (!pool)
+		pool = g_heap_dft;
+	pthread_mutex_lock(&pool->lock);
+	if (!(chk = bin_find(pool, ptr, &bin)))
+	{
+		pthread_mutex_unlock(&pool->lock);
+		return (-1);
+	}
+	if (!chk->rfc)
 	{
 		errno = EINVAL;
-		return -1;
+		pthread_mutex_unlock(&pool->lock);
+		return (-1);
 	}
-	++chk->refc;
-	return 0;
+	++chk->rfc;
+	pthread_mutex_unlock(&pool->lock);
+	return (0);
 }
 
-void		ufree(void *ptr)
+void		ufree(t_pool *pool, void *ptr)
 {
 	t_chunk	*chk;
+	t_bin	*bin;
 
-	if (!ptr)
-		return;
-	chk = (t_chunk *)ptr - 1;
-	bin_free(chunk_bin(chk), chk);
+	if (!ptr || (size_t)ptr % sizeof(t_chunk))
+		return ;
+	if (!pool)
+		pool = g_heap_dft;
+	pthread_mutex_lock(&pool->lock);
+	if (!(chk = bin_find(pool, ptr, &bin)))
+	{
+		pthread_mutex_unlock(&pool->lock);
+		return ;
+	}
+	bin_free(bin, chk);
+	pthread_mutex_unlock(&pool->lock);
 }
 
-size_t		usize(void *ptr)
+size_t		usize(t_pool *pool, void *ptr)
 {
 	t_chunk	*chk;
+	t_bin	*bin;
+	size_t	ret;
 
-	if (!ptr)
+	if (!ptr || (size_t)ptr % sizeof(t_chunk))
 		return (0);
-	chk = (t_chunk *)ptr - 1;
-	return (chunk_size(chk));
+	if (!pool)
+		pool = g_heap_dft;
+	pthread_mutex_lock(&pool->lock);
+	if (!(chk = bin_find(pool, ptr, &bin)))
+	{
+		pthread_mutex_unlock(&pool->lock);
+		return (0);
+	}
+	if (chk->lrg)
+		ret = bin->size - sizeof(t_bin) - sizeof(t_chunk);
+	else
+		ret = chunk_size(chk);
+	pthread_mutex_unlock(&pool->lock);
+	return (ret);
 }

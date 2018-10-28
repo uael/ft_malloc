@@ -16,21 +16,21 @@
 # include <stddef.h>
 # include <stdint.h>
 
-typedef struct s_bin	t_bin;
+struct s_bin;
 
 typedef struct			s_chunk
 {
-	uint16_t			solo: 1;
-	uint16_t			refc: 15;
+	uint16_t			lrg: 1;
+	uint16_t			rfc: 15;
 	uint16_t			prv;
 	uint16_t			off;
 	uint16_t			nxt;
 }						t_chunk;
 
-extern t_bin			*chunk_bin(t_chunk *chunk);
+struct s_bin			*chunk_bin(t_chunk *chunk);
 extern uintptr_t		chunk_mem(t_chunk *chunk);
 extern size_t			chunk_size(t_chunk *chunk);
-extern t_chunk			*chunk_nxt(t_chunk *chunk, t_bin *bin);
-extern t_chunk			*chunk_prv(t_chunk *chunk, t_bin *bin);
+extern t_chunk			*chunk_nxt(t_chunk *chunk, struct s_bin *bin);
+extern t_chunk			*chunk_prv(t_chunk *chunk, struct s_bin *bin);
 
 #endif

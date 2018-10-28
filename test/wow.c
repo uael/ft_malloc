@@ -20,36 +20,44 @@
 
 uint8_t g_mem[UINT16_MAX];
 
-void dump(t_stream *f, t_bin *bin, t_chunk *chunk)
+void dump(t_pool *pool, t_stream *f, t_bin *bin, t_chunk *chunk, int i)
 {
 	if (!chunk) return;
 
  	assert(bin == chunk_bin(chunk));
 
-	ft_fprintf(f, "[%c] (%6u) |%p -> %p|\n",
-			   chunk->refc ? 'X' : ' ',
-			   chunk_size(chunk), chunk, bin->head + chunk->nxt);
+ 	if (i == 0)
+	{
+		ft_fprintf(f, "         (%6u) |%p -> %p|\n",
+			bin->size, bin, bin + bin->size);
+	}
+
+	ft_fprintf(f, "%d: [%c] (%6u) |%p -> %p|\n",
+			   i, chunk->rfc ? 'X' : ' ',
+			   usize(pool, (void *)chunk_mem(chunk)), chunk, bin->head + chunk->nxt);
+	if (chunk->lrg)
+		return;
 	if (chunk->nxt == bin->tail->off)
 	{
 		if (bin->next)
-			return dump(f, bin->next, bin->next->head);
+			return dump(pool, f, bin->next, bin->next->head, 0);
 		return;
 	}
-	dump(f, bin, bin->head + chunk->nxt);
+	dump(pool, f, bin, bin->head + chunk->nxt, i + 1);
 }
 
 void dump_pool(t_stream *f, t_pool *pool)
 {
-	ft_fprintf(g_stdout, "-------------------- tiny  -----------------\n");
+	ft_fprintf(f, "-------------------- tiny  -----------------\n");
 	if (pool->def.heap.bins_tiny && pool->def.heap.bins_tiny->head)
-		dump(g_stdout, pool->def.heap.bins_tiny, pool->def.heap.bins_tiny->head);
-	ft_fprintf(g_stdout, "-------------------- small -----------------\n");
+		dump(pool, f, pool->def.heap.bins_tiny, pool->def.heap.bins_tiny->head, 0);
+	ft_fprintf(f, "-------------------- small -----------------\n");
 	if (pool->def.heap.bins_small && pool->def.heap.bins_small->head)
-		dump(g_stdout, pool->def.heap.bins_small, pool->def.heap.bins_small->head);
-	ft_fprintf(g_stdout, "-------------------- large -----------------\n");
+		dump(pool, f, pool->def.heap.bins_small, pool->def.heap.bins_small->head, 0);
+	ft_fprintf(f, "-------------------- large -----------------\n");
 	if (pool->def.heap.bins_large && pool->def.heap.bins_large->head)
-		dump(g_stdout, pool->def.heap.bins_large, pool->def.heap.bins_large->head);
-	ft_fprintf(g_stdout, "\n\n");
+		dump(pool, f, pool->def.heap.bins_large, pool->def.heap.bins_large->head, 0);
+	ft_fprintf(f, "\n\n");
 }
 
 int main(int ac, char *av[])
@@ -81,23 +89,23 @@ int main(int ac, char *av[])
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[1]);
+	ufree(pool, ptr[1]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[2]);
+	ufree(pool, ptr[2]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[3]);
+	ufree(pool, ptr[3]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[0]);
+	ufree(pool, ptr[0]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[4]);
+	ufree(pool, ptr[4]);
 
 	dump_pool(g_stdout, pool);
 
@@ -113,7 +121,7 @@ int main(int ac, char *av[])
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[1]);
+	ufree(pool, ptr[1]);
 
 	dump_pool(g_stdout, pool);
 
@@ -121,15 +129,15 @@ int main(int ac, char *av[])
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[0]);
+	ufree(pool, ptr[0]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[1]);
+	ufree(pool, ptr[1]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[2]);
+	ufree(pool, ptr[2]);
 
 	dump_pool(g_stdout, pool);
 
@@ -153,23 +161,23 @@ int main(int ac, char *av[])
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[1]);
+	ufree(pool, ptr[1]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[2]);
+	ufree(pool, ptr[2]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[3]);
+	ufree(pool, ptr[3]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[0]);
+	ufree(pool, ptr[0]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[4]);
+	ufree(pool, ptr[4]);
 
 	dump_pool(g_stdout, pool);
 
@@ -185,7 +193,7 @@ int main(int ac, char *av[])
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[1]);
+	ufree(pool, ptr[1]);
 
 	dump_pool(g_stdout, pool);
 
@@ -193,15 +201,15 @@ int main(int ac, char *av[])
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[0]);
+	ufree(pool, ptr[0]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[1]);
+	ufree(pool, ptr[1]);
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[2]);
+	ufree(pool, ptr[2]);
 
 	dump_pool(g_stdout, pool);
 
@@ -209,7 +217,7 @@ int main(int ac, char *av[])
 
 	dump_pool(g_stdout, pool);
 
-	ufree(ptr[1]);
+	ufree(pool, ptr[1]);
 
 	dump_pool(g_stdout, pool);
 

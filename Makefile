@@ -6,7 +6,7 @@
 #    By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 1970/01/01 00:00:42 by alucas-           #+#    #+#              #
-#    Updated: 1970/01/01 00:00:42 by alucas-          ###   ########.fr        #
+#    Updated: 2018/10/28 17:05:13 by alucas-          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,6 +24,8 @@ MAKE_DEPS = Makefile
 
 CC=gcc
 LD=gcc
+LDFLAGS = -shared
+CFLAGS = -fPIC
 
 ifneq ($(DEBUG),)
   CONFIG = debug

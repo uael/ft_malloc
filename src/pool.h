@@ -24,7 +24,7 @@ enum	e_pool
 
 struct				s_stack
 {
-	t_bin			bin;
+	t_bin			*bin;
 };
 
 struct				s_heap
@@ -44,6 +44,7 @@ typedef struct		s_pool
 {
 	enum e_pool		kind;
 	union u_pool	def;
+	pthread_mutex_t	lock;
 }					t_pool;
 
 #endif

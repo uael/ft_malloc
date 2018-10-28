@@ -13,15 +13,15 @@
 #ifndef MALLOC_H
 # define MALLOC_H
 
-# include <stddef.h>
 # include <stdint.h>
-
-# include <stdlib.h>
+# include <stddef.h>
 
 extern void	free(void *ptr);
 extern void	*malloc(size_t size);
 extern void	*realloc(void *ptr, size_t size);
+extern void	*reallocf(void *ptr, size_t size);
 extern void	*calloc(size_t nmemb, size_t size);
+extern void	*valloc(size_t size);
 extern void	show_alloc_mem(void);
 
 #endif

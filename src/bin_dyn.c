@@ -15,69 +15,57 @@
 # include <errno.h>
 # include <sys/mman.h>
 
-static t_bin			g_bins[MAX_BIN];
-static pthread_mutex_t	bin_lock = PTHREAD_MUTEX_INITIALIZER;
-
-static t_bin			*bin_slot(void)
+static int		bin_mmap(t_bin **pbin, t_bin **bhd,
+								 enum e_class class, size_t sz)
 {
-	unsigned	i;
+	void		*mem;
 	t_bin		*bin;
+	uint16_t	tail;
 
-	i = 0;
-	pthread_mutex_lock(&bin_lock);
-	while (i < MAX_BIN && g_bins[i].tail)
-		++i;
-	if (i == MAX_BIN)
-	{
-		errno = ENOMEM;
-		pthread_mutex_unlock(&bin_lock);
-		return (NULL);
-	}
-	bin = g_bins + i;
-	pthread_mutex_unlock(&bin_lock);
-	return bin;
-}
-
-static int				bin_mmap(t_bin *bin, enum e_class class, size_t sz)
-{
-	void *mem;
-	uint16_t tail;
-
-	*bin = (t_bin){ .lock = PTHREAD_MUTEX_INITIALIZER };
-	bin->size = class == CLASS_LARGE
-		? ((sz + sizeof(void *) + (sizeof(t_chunk) * 2)) - 1) & -sizeof(t_chunk)
+	sz = class == CLASS_LARGE
+		? (sz + sizeof(t_bin) + sizeof(t_chunk) - 1) & -sizeof(t_chunk)
 		: ((size_t)(1 << class) * MIN_ALLOC);
-	mem = mmap(NULL, bin->size, PROT_READ | PROT_WRITE,
-			   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	mem = mmap(NULL, sz, PROT_READ | PROT_WRITE,
+		MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	if (mem == MAP_FAILED)
+	{
+		*pbin = NULL;
 		return (-1);
-	*(void **)mem = bin;
-	bin->head = (t_chunk *)((void **)mem + 1);
-	tail = (uint16_t)((bin->size - sizeof(void *)) / sizeof(t_chunk));
-	if (class != CLASS_LARGE)
-		--tail;
-	bin->tail = bin->head + tail;
-	*bin->tail = (t_chunk){ .off = tail, .refc = 1 };
-	*bin->head = (t_chunk){ .nxt = tail };
+	}
+	*pbin = mem;
+	bin = *pbin;
+	*bin = (t_bin){ .bhd = bhd, .size = sz };
+	bin->head = (t_chunk *)((t_bin *)mem + 1);
+	if (class == CLASS_LARGE)
+		*bin->head = (t_chunk){ .lrg = 1, .rfc = 1 };
+	else
+	{
+		tail = (uint16_t)(((bin->size - sizeof(t_bin)) / sizeof(t_chunk)) - 1);
+		bin->tail = bin->head + tail;
+		*bin->tail = (t_chunk){ .off = tail };
+		*bin->head = (t_chunk){ .nxt = tail };
+	}
 	return 0;
 }
 
-void					*bin_dyn_alloc(t_bin **pbin, enum e_class cl, size_t sz)
+void			*bin_dyn_alloc(t_bin **pbin, enum e_class cl, size_t sz)
 {
-	void *ptr;
-	t_bin *prev;
+	void	*ptr;
+	t_bin	*prev;
+	t_bin	**bhd;
 
+	bhd = pbin;
 	prev = NULL;
 	while (1)
-		if ((!*pbin || !(*pbin)->head)) {
-			if (*pbin) (*pbin)->tail = NULL;
-			if (!(*pbin = bin_slot()))
+		if (!*pbin)
+		{
+			if (bin_mmap(pbin, bhd, cl, sz))
 				return (NULL);
 			(*pbin)->prev = prev;
-			return (bin_mmap(*pbin, cl, sz)
-					? (*pbin = NULL) : bin_flat_alloc(*pbin, sz));
+			return (cl == CLASS_LARGE
+				? (*pbin)->head + 1 : bin_flat_alloc(*pbin, sz));
 		}
-		else if ((ptr = bin_flat_alloc(*pbin, sz)))
+		else if (cl != CLASS_LARGE && (ptr = bin_flat_alloc(*pbin, sz)))
 			return (ptr);
 		else
 		{
@@ -86,19 +74,72 @@ void					*bin_dyn_alloc(t_bin **pbin, enum e_class cl, size_t sz)
 		}
 }
 
-void					bin_dyn_free(t_bin *bin)
+void			bin_dyn_free(t_bin *bin)
 {
-	munmap(*((void **)bin->head - 1), bin->size);
-	bin->head = NULL;
+	if (bin->prev)
+		bin->prev->next = bin->next;
+	if (bin->next)
+		bin->next->prev = bin->prev;
+	if (bin == *bin->bhd)
+		*bin->bhd = bin->next;
+	munmap(bin, bin->size);
 }
 
-void					bin_dyn_freeall(t_bin *bin)
+void			bin_dyn_freeall(t_bin *bin)
 {
+	t_bin *next;
+
 	if (!bin)
 		return;
-	pthread_mutex_lock(&bin->lock);
-	if (bin->head)
-		bin_dyn_free(bin);
-	pthread_mutex_unlock(&bin->lock);
-	return (bin_dyn_freeall(bin->next));
+	next = bin->next;
+	bin_dyn_free(bin);
+	return (bin_dyn_freeall(next));
+}
+
+static t_chunk	*find_alloc(t_bin *bin, uintptr_t ptr, t_bin **pbin)
+{
+	t_chunk	*chk;
+
+	chk = bin->head;
+	while (1)
+	{
+		if (chunk_mem(chk) >= ptr && ptr < (uintptr_t)chunk_nxt(chk, bin))
+		{
+			*pbin = bin;
+			return (chk);
+		}
+		if (chk->nxt == bin->tail->off)
+			break;
+		chk = chunk_nxt(chk, bin);
+	}
+	return (NULL);
+}
+
+t_chunk			*bin_fnd(int lrg, t_bin *bin, uintptr_t ptr, t_bin **pbin)
+{
+	if (!bin)
+		return (NULL);
+	if (ptr >= (uintptr_t)bin && ptr <= ((uintptr_t)bin + bin->size))
+	{
+		if (lrg)
+		{
+			*pbin = bin;
+			return (bin->head);
+		}
+		return (find_alloc(bin, ptr, pbin));
+	}
+	return (bin_fnd(lrg, bin->next, ptr, pbin));
+}
+
+t_chunk			*bin_find(struct s_pool *pool, void *ptr, t_bin **pbin)
+{
+	t_chunk *chk;
+
+	if (pool->kind == POOL_STACK)
+		return (bin_fnd(0, pool->def.stack.bin, (uintptr_t)ptr, pbin));
+	if ((chk = bin_fnd(0, pool->def.heap.bins_tiny, (uintptr_t)ptr, pbin)))
+		return (chk);
+	if ((chk = bin_fnd(0, pool->def.heap.bins_small, (uintptr_t)ptr, pbin)))
+		return (chk);
+	return (bin_fnd(1, pool->def.heap.bins_large, (uintptr_t)ptr, pbin));
 }

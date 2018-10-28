@@ -15,7 +15,7 @@
 
 inline t_bin		*chunk_bin(t_chunk *chunk)
 {
-	return (*(t_bin **)((uintptr_t)(chunk - chunk->off) - sizeof(t_bin *)));
+	return ((t_bin *)(chunk - chunk->off) - 1);
 }
 
 inline uintptr_t	chunk_mem(t_chunk *chunk)

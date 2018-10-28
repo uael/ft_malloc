@@ -20,7 +20,7 @@ static t_chunk	*find_free(t_bin *bin, size_t sz)
 	t_chunk	*chk;
 
 	chk = bin->head;
-	while (chk->refc || chunk_size(chk) < sz)
+	while (chk->rfc || chunk_size(chk) < sz)
 	{
 		if (chk->nxt == bin->tail->off)
 			return NULL;
@@ -37,13 +37,6 @@ static void		trim(t_bin *bin, t_chunk *chk, size_t sz)
 	*nxt = (t_chunk){ .nxt = chk->nxt, .prv = chk->off,
 		.off = (uint16_t)(nxt - bin->head) };
 	chk->nxt = nxt->off;
-	chk = nxt;
-	nxt = chunk_nxt(chk, bin);
-	if (!nxt->refc)
-	{
-		chk->nxt = nxt->off;
-		nxt->prv = chk->off;
-	}
 }
 
 void			*bin_flat_alloc(t_bin *bin, size_t sz)
@@ -53,16 +46,14 @@ void			*bin_flat_alloc(t_bin *bin, size_t sz)
 
 	ptr = NULL;
 	sz = (sz + sizeof(t_chunk) - 1) & -sizeof(t_chunk);
-	pthread_mutex_lock(&bin->lock);
 	if ((chk = find_free(bin, sz)))
 	{
 		if (chunk_size(chk) > sz + sizeof(t_chunk))
 			trim(bin, chk, sz);
-		chk->refc = 1;
-		chk->solo = 0;
+		chk->rfc = 1;
+		chk->lrg = 0;
 		ptr = (void *)chunk_mem(chk);
 	}
-	pthread_mutex_unlock(&bin->lock);
 	return (ptr);
 }
 
@@ -71,26 +62,27 @@ void			bin_free(t_bin *bin, t_chunk *chk)
 	t_chunk	*prv;
 	t_chunk	*nxt;
 
-	if (!chk->refc)
+	if (!chk->rfc)
 		return;
-	pthread_mutex_lock(&bin->lock);
-	if (!--chk->refc)
+	if (!--chk->rfc)
 	{
-		prv = chunk_prv(chk, bin);
-		nxt = chunk_nxt(chk, bin);
-		if (!prv->refc || !nxt->refc)
+		if (!chk->lrg)
 		{
-			if (!nxt->refc)
-				nxt = chunk_nxt(nxt, bin);
-			if (!prv->refc)
-				chk = prv;
-			chk->nxt = nxt->off;
-			nxt->prv = chk->off;
+			prv = chunk_prv(chk, bin);
+			nxt = chunk_nxt(chk, bin);
+			if ((prv != chk && !prv->rfc) || !nxt->rfc)
+			{
+				if (!nxt->rfc)
+					nxt = chunk_nxt(nxt, bin);
+				if (!prv->rfc)
+					chk = prv;
+				chk->nxt = nxt->off;
+				nxt->prv = chk->off;
+			}
 		}
-		if (bin->head->nxt == bin->tail->off)
+		if (chk->lrg || bin->head->nxt == bin->tail->off)
 			bin_dyn_free(bin);
 	}
-	pthread_mutex_unlock(&bin->lock);
 }
 
 int				bin_resize(t_bin *bin, t_chunk *chk, size_t nsz)
@@ -99,14 +91,15 @@ int				bin_resize(t_bin *bin, t_chunk *chk, size_t nsz)
 	size_t	chsz;
 	int		ret;
 
+	if (chk->lrg)
+		return (-1);
 	ret = 0;
 	chsz = chunk_size(chk);
 	nsz = (nsz + sizeof(t_chunk) - 1) & -sizeof(t_chunk);
-	pthread_mutex_lock(&bin->lock);
 	if (chsz < nsz)
 	{
 		nxt = chunk_nxt(chk, bin);
-		if (nxt->refc || (chunk_size(nxt) + sizeof(t_chunk) + chsz) < nsz)
+		if (nxt->rfc || (chunk_size(nxt) + sizeof(t_chunk) + chsz) < nsz)
 			ret = -1;
 		else
 		{
@@ -118,6 +111,5 @@ int				bin_resize(t_bin *bin, t_chunk *chk, size_t nsz)
 	}
 	if (!ret && chsz > nsz + sizeof(t_chunk))
 		trim(bin, chk, nsz);
-	pthread_mutex_unlock(&bin->lock);
 	return (ret);
 }

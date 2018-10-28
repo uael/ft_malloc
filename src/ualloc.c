@@ -18,6 +18,7 @@
 void		*ualloc(t_pool *pool, size_t sz)
 {
 	enum e_class	class;
+	void			*ptr;
 
 	if (!pool)
 		pool = g_heap_dft;
@@ -26,14 +27,20 @@ void		*ualloc(t_pool *pool, size_t sz)
 		errno = EINVAL;
 		return (NULL);
 	}
-	if (pool->kind == POOL_STACK)
-		return (bin_flat_alloc(&pool->def.stack.bin, sz));
+	if (!sz)
+		return (NULL);
+	pthread_mutex_lock(&pool->lock);
 	class = classof(sz);
-	if (class == CLASS_TINY)
-		return (bin_dyn_alloc(&pool->def.heap.bins_tiny, class, sz));
-	if (class == CLASS_SMALL)
-		return (bin_dyn_alloc(&pool->def.heap.bins_small, class, sz));
-	return (bin_dyn_alloc(&pool->def.heap.bins_large, class, sz));
+	if (pool->kind == POOL_STACK)
+		ptr = bin_flat_alloc(pool->def.stack.bin, sz);
+	else if (class == CLASS_TINY)
+		ptr = bin_dyn_alloc(&pool->def.heap.bins_tiny, class, sz);
+	else if (class == CLASS_SMALL)
+		ptr = bin_dyn_alloc(&pool->def.heap.bins_small, class, sz);
+	else
+		ptr = bin_dyn_alloc(&pool->def.heap.bins_large, class, sz);
+	pthread_mutex_unlock(&pool->lock);
+	return (ptr);
 }
 
 void		*uzalloc(t_pool *pool, size_t sz)
@@ -57,14 +64,26 @@ void		*urealloc(t_pool *pool, void *ptr, size_t sz)
 	void	*nptr;
 	size_t	psz;
 
+	if (!sz)
+		return (NULL);
 	if (!ptr)
 		return (ualloc(pool, sz));
-	chk = (t_chunk *)ptr - 1;
-	bin = chunk_bin(chk);
+	if (!pool)
+		pool = g_heap_dft;
+	pthread_mutex_lock(&pool->lock);
+	if (!(chk = bin_find(pool, ptr, &bin)))
+	{
+		pthread_mutex_unlock(&pool->lock);
+		return (NULL);
+	}
 	if (!bin_resize(bin, chk, sz))
+	{
+		pthread_mutex_unlock(&pool->lock);
 		return (ptr);
+	}
 	psz = chunk_size(chk);
 	bin_free(bin, chk);
+	pthread_mutex_unlock(&pool->lock);
 	if (!(nptr = ualloc(pool, sz)))
 		return (NULL);
 	ft_memcpy(nptr, ptr, psz);
@@ -78,17 +97,29 @@ void		*uzrealloc(t_upool pool, void *ptr, size_t sz)
 	void	*nptr;
 	size_t	psz;
 
+	if (!sz)
+		return (NULL);
 	if (!ptr)
 		return (ualloc(pool, sz));
-	chk = (t_chunk *)ptr - 1;
-	bin = chunk_bin(chk);
+	if (!pool)
+		pool = g_heap_dft;
+	pthread_mutex_lock(&pool->lock);
+	if (!(chk = bin_find(pool, ptr, &bin)))
+	{
+		pthread_mutex_unlock(&pool->lock);
+		return (NULL);
+	}
 	if (!bin_resize(bin, chk, sz))
+	{
+		pthread_mutex_unlock(&pool->lock);
 		return (ptr);
+	}
 	psz = chunk_size(chk);
 	bin_free(bin, chk);
+	pthread_mutex_unlock(&pool->lock);
 	if (!(nptr = ualloc(pool, sz)))
 		return (NULL);
 	ft_memcpy(nptr, ptr, psz);
-	ft_memset(nptr + psz, 0, usize(nptr) - psz);
+	ft_memset(nptr + psz, 0, usize(pool, nptr) - psz);
 	return (nptr);
 }
