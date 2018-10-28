@@ -74,7 +74,7 @@ macro(wow NAME)
       $<$<CONFIG:San>:-fno-omit-frame-pointer>)
     target_compile_options(${NAME}
       PRIVATE
-        -Wall -Werror -Wextra
+        -Wall -Werror -Wextra -fPIC
         -ansi -fomit-frame-pointer
         -Wno-missing-field-initializers
         $<$<CONFIG:Release>:-O3 -flto>
@@ -84,9 +84,13 @@ macro(wow NAME)
 endmacro()
 
 wow(ft_malloc
+  ${__SRC_DIR}/class.c
   ${__SRC_DIR}/pool.c
-  ${__SRC_DIR}/ualloc.c
-  ${__SRC_DIR}/malloc.c)
+  ${__SRC_DIR}/chunk.c
+  ${__SRC_DIR}/bin.c
+  ${__SRC_DIR}/bin_dyn.c
+  ${__SRC_DIR}/ufree.c
+  ${__SRC_DIR}/ualloc.c)
 
 add_executable(wow test/wow.c)
 target_link_libraries(wow ft_malloc)

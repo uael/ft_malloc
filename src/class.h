@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pool.h                                             :+:      :+:    :+:   */
+/*   class.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,40 +10,35 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef POOL_H
-# define POOL_H
+#ifndef CLASS_H
+# define CLASS_H
 
-# include "bin.h"
+# include "ualloc.h"
 
-enum	e_pool
+# define MAX_BIN   (1 << 8)
+# define MAX_POOL  (1 << 8)
+# define MIN_ALLOC (1 << 7)
+
+/*
+** Allocation size classes definition
+** Each class get it's own bin entries
+** Tiny and small are divided in chunk of equal size, which are used or not
+*/
+
+enum	e_class
 {
-	POOL_NONE = 0,
-	POOL_STACK,
-	POOL_HEAP,
+	CLASS_ALL   = 0x01,
+	CLASS_TINY  = 0x06,
+	CLASS_SMALL = 0x09,
+	CLASS_LARGE = 0x10,
 };
 
-struct				s_stack
+enum	e_size
 {
-	t_bin			bin;
+	SIZE_TINY  = (1 << CLASS_TINY ) * 32,
+	SIZE_SMALL = (1 << CLASS_SMALL) * 32,
 };
 
-struct				s_heap
-{
-	t_bin			*bins_tiny;
-	t_bin			*bins_small;
-	t_bin			*bins_large;
-};
-
-union				u_pool
-{
-	struct s_stack	stack;
-	struct s_heap	heap;
-};
-
-typedef struct		s_pool
-{
-	enum e_pool		kind;
-	union u_pool	def;
-}					t_pool;
+enum e_class	classof(size_t sz);
 
 #endif

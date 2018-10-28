@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   malloc.c                                           :+:      :+:    :+:   */
+/*   class.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,5 +10,13 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ualloc.h"
+#include "class.h"
 
+enum e_class	classof(size_t sz)
+{
+	if (sz <= SIZE_TINY)
+		return CLASS_TINY;
+	if (sz <= SIZE_SMALL)
+		return CLASS_SMALL;
+	return CLASS_LARGE;
+}

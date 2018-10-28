@@ -20,7 +20,9 @@
 ** Memory pool handle definition.
 ** Pool contains memory chunk and are stack or heap based.
 */
-typedef struct s_upool	*t_upool;
+typedef struct s_pool	*t_upool;
+
+extern t_upool			g_heap_dft;
 
 /*
 ** Create a new stack memory pool.
@@ -34,11 +36,10 @@ extern int				ustack(void *mem, size_t sz, t_upool *pool);
 /*
 ** Create a new heap memory pool.
 ** Heap pool are (un)mapped from file.
-** @param spansz  [in] Heap memory span size
 ** @param pool   [out] Pointer to a new pool handle
 ** @return             0 on success, -1 with errno set otherwise
 */
-extern int				uheap(size_t spansz, t_upool *pool);
+extern int				uheap(t_upool *pool);
 
 /*
 ** Release a memory pool.
@@ -49,25 +50,9 @@ extern int				uheap(size_t spansz, t_upool *pool);
 extern int				urelease(t_upool pool);
 
 /*
-** Push a memory pool as the current allocation context.
-** Consider using pop to revert to the previous context, as many time
-** as you push.
-** @param pool    [in] Memory pool to push
-** @return             0 on success, -1 with errno set otherwise
-*/
-extern int				upush(t_upool pool);
-
-/*
-** Pop a memory pool and revert to the previous context.
-** The last call of `upop` will result on a pool release (eq. `urelease`).
-** @return             0 on success, -1 with errno set otherwise
-*/
-extern int				upop(void);
-
-/*
 ** Allocate `sz` new memory.
 ** No zeroed memory guaranty, consider using `uzalloc` or `ucalloc` otherwise.
-** @param pool    [in] Memory pool to use (current if `NULL`, cf. `upush`)
+** @param pool    [in] Memory pool to use (`g_heap_dft` if `NULL`)
 ** @param sz      [in] Allocation size in bytes
 ** @return             Begin of the new memory on success, `NULL` otherwise
 */
@@ -75,7 +60,7 @@ extern void				*ualloc(t_upool pool, size_t sz);
 
 /*
 ** Allocate `sz` new zeroed memory
-** @param pool    [in] Memory pool to use (current if `NULL`, cf. `upush`)
+** @param pool    [in] Memory pool to use (`g_heap_dft` if `NULL`)
 ** @param sz      [in] Allocation size in bytes
 ** @return             Begin of the new memory on success, `NULL` otherwise
 */
@@ -83,7 +68,7 @@ extern void				*uzalloc(t_upool pool, size_t sz);
 
 /*
 ** Allocate zeroed memory with `num` elements of `sz` size
-** @param pool    [in] Memory pool to use (current if `NULL`, cf. `upush`)
+** @param pool    [in] Memory pool to use (`g_heap_dft` if `NULL`)
 ** @param num     [in] Number of element to allocate
 ** @param sz      [in] Allocation size in bytes of an element
 ** @return             Begin of the new memory on success, `NULL` otherwise
@@ -93,19 +78,21 @@ extern void				*ucalloc(t_upool pool, size_t num, size_t sz);
 /*
 ** Re-allocate `ptr` memory pointer to `sz`.
 ** No zeroed memory guaranty, consider using `uzrealloc` otherwise.
+** @param pool    [in] Memory pool to use (`g_heap_dft` if `NULL`)
 ** @param ptr     [in] Memory pointer to re-allocate
 ** @param sz      [in] Re-allocation size in bytes
 ** @return             Begin of the new memory on success, `NULL` otherwise
 */
-extern void				*urealloc(void *ptr, size_t sz);
+extern void				*urealloc(t_upool pool, void *ptr, size_t sz);
 
 /*
 ** Re-allocate `ptr` memory pointer to `sz` zeroed memory.
+** @param pool    [in] Memory pool to use (`g_heap_dft` if `NULL`)
 ** @param ptr     [in] Memory pointer to re-allocate
 ** @param sz      [in] Re-allocation size in bytes
 ** @return             Begin of the new memory on success, `NULL` otherwise
 */
-extern void				*uzrealloc(void *ptr, size_t sz);
+extern void				*uzrealloc(t_upool pool, void *ptr, size_t sz);
 
 /*
 ** Reference a memory pointer, once referenced 'n' time, `ufree` have to be

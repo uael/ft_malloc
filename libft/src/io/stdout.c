@@ -18,7 +18,7 @@ static t_stream	g_f = {
 	.buf_size = sizeof(g_buf),
 	.fd = STDOUT_FILENO,
 	.flags = FT_FPERM | FT_FNORD,
-	.lbf = -1,
+	.lbf = '\n',
 	.write = stdiowrite,
 	.lock = -1,
 };

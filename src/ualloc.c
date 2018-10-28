@@ -12,61 +12,83 @@
 
 #include "pool.h"
 
-#include <string.h>
-#include <unistd.h>
 #include <errno.h>
+#include <libft.h>
 
-void				*ualloc(t_upool pool, size_t sz)
+void		*ualloc(t_pool *pool, size_t sz)
 {
-	struct s_uptr	*ptr;
-	struct s_uptr	*next;
+	enum e_class	class;
 
-	ptr = pool->free;
-	while (ptr && ptr->next && ptr->size < sz)
-		ptr = ptr->next;
-	if (!ptr || ptr->size < sz)
+	if (!pool)
+		pool = g_heap_dft;
+	else if (pool->kind == POOL_NONE)
 	{
-		errno = ENOMEM;
+		errno = EINVAL;
 		return (NULL);
 	}
-	if (ptr->size <= sz + sizeof(struct s_uptr))
-		next = ptr->next;
-	else
-	{
-		next = (struct s_uptr *)((uint8_t *)(ptr + 1) + sz);
-		next->size = (uint32_t)(ptr->size - ((char *)next - (char *)ptr));
-		next->next = ptr->next;
-	}
-	if (pool->free == ptr)
-		pool->free = next;
-	ptr->pool = pool;
-	ptr->size = (uint32_t)sz;
-	ptr->refcnt = 1;
-	return ptr + 1;
+	if (pool->kind == POOL_STACK)
+		return (bin_flat_alloc(&pool->def.stack.bin, sz));
+	class = classof(sz);
+	if (class == CLASS_TINY)
+		return (bin_dyn_alloc(&pool->def.heap.bins_tiny, class, sz));
+	if (class == CLASS_SMALL)
+		return (bin_dyn_alloc(&pool->def.heap.bins_small, class, sz));
+	return (bin_dyn_alloc(&pool->def.heap.bins_large, class, sz));
 }
 
-void				ufree(void *ptr)
+void		*uzalloc(t_pool *pool, size_t sz)
 {
-	struct s_uptr	*hdr;
-	t_upool			pool;
+	void *ptr;
 
-	hdr = (struct s_uptr *)ptr - 1;
-	if (--hdr->refcnt)
-		return;
-	pool = hdr->pool;
-	hdr->next = pool->free;
-	pool->free = hdr;
-	if ((char *)(hdr + 1) + hdr->size == (char *)hdr->next)
-	{
-		hdr->size += hdr->next->size + sizeof(struct s_uptr);
-		hdr->next = hdr->next->next;
-	}
+	if ((ptr = ualloc(pool, sz)))
+		ft_memset(ptr, 0, sz);
+	return (ptr);
 }
 
-size_t				usize(void *ptr)
+void		*ucalloc(t_pool *pool, size_t num, size_t sz)
 {
-	struct s_uptr	*hdr;
+	return (uzalloc(pool, num * sz));
+}
 
-	hdr = (struct s_uptr *)ptr - 1;
-	return hdr->size;
+void		*urealloc(t_pool *pool, void *ptr, size_t sz)
+{
+	t_chunk	*chk;
+	t_bin	*bin;
+	void	*nptr;
+	size_t	psz;
+
+	if (!ptr)
+		return (ualloc(pool, sz));
+	chk = (t_chunk *)ptr - 1;
+	bin = chunk_bin(chk);
+	if (!bin_resize(bin, chk, sz))
+		return (ptr);
+	psz = chunk_size(chk);
+	bin_free(bin, chk);
+	if (!(nptr = ualloc(pool, sz)))
+		return (NULL);
+	ft_memcpy(nptr, ptr, psz);
+	return (nptr);
+}
+
+void		*uzrealloc(t_upool pool, void *ptr, size_t sz)
+{
+	t_chunk	*chk;
+	t_bin	*bin;
+	void	*nptr;
+	size_t	psz;
+
+	if (!ptr)
+		return (ualloc(pool, sz));
+	chk = (t_chunk *)ptr - 1;
+	bin = chunk_bin(chk);
+	if (!bin_resize(bin, chk, sz))
+		return (ptr);
+	psz = chunk_size(chk);
+	bin_free(bin, chk);
+	if (!(nptr = ualloc(pool, sz)))
+		return (NULL);
+	ft_memcpy(nptr, ptr, psz);
+	ft_memset(nptr + psz, 0, usize(nptr) - psz);
+	return (nptr);
 }

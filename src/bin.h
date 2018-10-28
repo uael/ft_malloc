@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pool.h                                             :+:      :+:    :+:   */
+/*   bin.h                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,40 +10,32 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef POOL_H
-# define POOL_H
+#ifndef BIN_H
+# define BIN_H
 
-# include "bin.h"
+#include <pthread.h>
 
-enum	e_pool
+# include "class.h"
+# include "chunk.h"
+
+struct s_pool;
+
+typedef struct		s_bin
 {
-	POOL_NONE = 0,
-	POOL_STACK,
-	POOL_HEAP,
-};
+	t_bin			*prev;
+	t_bin			*next;
+	t_chunk			*head;
+	t_chunk			*tail;
+	size_t			size;
+	pthread_mutex_t lock;
+}					t_bin;
 
-struct				s_stack
-{
-	t_bin			bin;
-};
+void				*bin_dyn_alloc(t_bin **pbin, enum e_class cl, size_t sz);
+void				bin_dyn_free(t_bin *bin);
+void				bin_dyn_freeall(t_bin *bin);
 
-struct				s_heap
-{
-	t_bin			*bins_tiny;
-	t_bin			*bins_small;
-	t_bin			*bins_large;
-};
-
-union				u_pool
-{
-	struct s_stack	stack;
-	struct s_heap	heap;
-};
-
-typedef struct		s_pool
-{
-	enum e_pool		kind;
-	union u_pool	def;
-}					t_pool;
+void				*bin_flat_alloc(t_bin *bin, size_t sz);
+void				bin_free(t_bin *bin, t_chunk *chk);
+int					bin_resize(t_bin *bin, t_chunk *chk, size_t nsz);
 
 #endif

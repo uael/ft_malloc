@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pool.c                                             :+:      :+:    :+:   */
+/*   pool.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -12,27 +12,99 @@
 
 #include "pool.h"
 
-#include <unistd.h>
 #include <errno.h>
 
-struct s_upool	g_pools[MAX_POOL];
+static t_pool			g_pools[MAX_POOL];
+static t_pool			g_heap_dft_stack;
+static pthread_mutex_t	pool_lock = PTHREAD_MUTEX_INITIALIZER;
 
-int				ustack(void *mem, size_t sz, t_upool *pool)
+t_pool					*g_heap_dft = &g_heap_dft_stack;
+
+static t_pool			*pool_slot(enum e_pool kind)
 {
-	unsigned pool_id;
+	unsigned	i;
+	t_pool		*pool;
 
-	pool_id = 0;
-	while (pool_id < MAX_POOL && g_pools[pool_id].free)
-		++pool_id;
-	if (pool_id == MAX_POOL)
+	i = 0;
+	pthread_mutex_lock(&pool_lock);
+	while (i < MAX_POOL && g_pools[i].kind)
+		++i;
+	if (i == MAX_POOL)
 	{
 		errno = ENOMEM;
+		pthread_mutex_unlock(&pool_lock);
+		return (NULL);
+	}
+	pool = g_pools + i;
+	pool->kind = kind;
+	pthread_mutex_unlock(&pool_lock);
+	return (pool);
+}
+
+static void				stack_init(t_pool *pool, void *mem, size_t sz)
+{
+	t_bin		*bin;
+	uint16_t	tail;
+
+	bin = &pool->def.stack.bin;
+	*(void **)mem = bin;
+	*bin = (t_bin){
+		.size = sz - sizeof(void *),
+		.lock = PTHREAD_MUTEX_INITIALIZER
+	};
+	tail = (uint16_t)(bin->size / sizeof(t_chunk));
+	bin->head = (t_chunk *)((void **)mem + 1);
+	bin->tail = bin->head + tail;
+	*bin->tail = (t_chunk){ .off = tail };
+	*bin->head = (t_chunk){ .nxt = tail };
+}
+
+int						ustack(void *mem, size_t sz, t_pool **ppool)
+{
+	t_pool		*pool;
+
+	if (sz < sizeof(void *))
+	{
+		errno = EINVAL;
 		return (-1);
 	}
-	g_pools[pool_id].memory = mem;
-	g_pools[pool_id].size = sz;
-	g_pools[pool_id].free = mem;
-	g_pools[pool_id].free->size = (uint32_t)(sz - sizeof(struct s_uptr));
-	*pool = g_pools + pool_id;
-	return 0;
+	if (!(pool = pool_slot(POOL_STACK)))
+		return (-1);
+	stack_init(pool, mem, sz);
+	*ppool = pool;
+	return (0);
+}
+
+int						uheap(t_pool **ppool)
+{
+	t_pool *pool;
+
+	if (!(pool = pool_slot(POOL_HEAP)))
+		return (-1);
+	*ppool = pool;
+	return (0);
+}
+
+int						urelease(t_upool pool)
+{
+	if (pool->kind == POOL_NONE)
+	{
+		errno = EINVAL;
+		return (-1);
+	}
+	if (pool->kind == POOL_STACK)
+	{
+		stack_init(pool, *((void **)pool->def.stack.bin.head - 1),
+			pool->def.stack.bin.size + sizeof(void *));
+		return (0);
+	}
+	bin_dyn_freeall(pool->def.heap.bins_tiny);
+	pool->def.heap.bins_tiny = NULL;
+	bin_dyn_freeall(pool->def.heap.bins_small);
+	pool->def.heap.bins_small = NULL;
+	bin_dyn_freeall(pool->def.heap.bins_large);
+	pool->def.heap.bins_large = NULL;
+	if (pool != g_heap_dft)
+		pool->kind = POOL_NONE;
+	return (0);
 }

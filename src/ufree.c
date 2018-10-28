@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pool.h                                             :+:      :+:    :+:   */
+/*   ualloc.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,40 +10,40 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef POOL_H
-# define POOL_H
+#include "pool.h"
 
-# include "bin.h"
+#include <errno.h>
+#include <libft.h>
+#include <sys/mman.h>
 
-enum	e_pool
+
+
+int			uref(void *ptr)
 {
-	POOL_NONE = 0,
-	POOL_STACK,
-	POOL_HEAP,
-};
+	t_chunk	*chk;
 
-struct				s_stack
+	chk = (t_chunk *)ptr - 1;
+	if (!chk->refc)
+	{
+		errno = EINVAL;
+		return -1;
+	}
+	++chk->refc;
+	return 0;
+}
+
+void		ufree(void *ptr)
 {
-	t_bin			bin;
-};
+	t_chunk	*chk;
 
-struct				s_heap
+	chk = (t_chunk *)ptr - 1;
+	bin_free(chunk_bin(chk), chk);
+}
+
+size_t		usize(void *ptr)
 {
-	t_bin			*bins_tiny;
-	t_bin			*bins_small;
-	t_bin			*bins_large;
-};
+	t_chunk	*chk;
 
-union				u_pool
-{
-	struct s_stack	stack;
-	struct s_heap	heap;
-};
-
-typedef struct		s_pool
-{
-	enum e_pool		kind;
-	union u_pool	def;
-}					t_pool;
-
-#endif
+	chk = (t_chunk *)ptr - 1;
+	return (chunk_size(chk));
+}
