@@ -16,9 +16,9 @@
 #include <libft/str.h>
 
 static t_pool			g_pools[MAX_POOL];
-static t_pool			g_heap_dft_stack = { .kind = POOL_HEAP };
 static pthread_mutex_t	g_pool_lock = PTHREAD_MUTEX_INITIALIZER;
 
+t_pool					g_heap_dft_stack = { .kind = POOL_HEAP };
 t_pool					*g_uscope = &g_heap_dft_stack;
 
 static t_pool			*pool_slot(enum e_pool kind)

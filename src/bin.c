@@ -18,13 +18,17 @@
 static void		trim(t_bin *bin, t_chunk *chk, size_t sz)
 {
 	t_chunk	*nxt;
+	t_chunk	*nxt_nxt;
 
 	nxt = (t_chunk *)(chunk_mem(chk) + sz);
 	*nxt = (t_chunk){ .nxt = chk->nxt, .prv = chk->off,
 		.off = (uint16_t)(nxt - bin->head) };
+	nxt_nxt = chunk_nxt(nxt, bin);
+	if (!nxt_nxt->rfc)
+		chunk_nxt(nxt_nxt, bin)->prv = nxt->off;
+	else
+		nxt_nxt->prv = nxt->off;
 	chk->nxt = nxt->off;
-	chk = chunk_nxt(nxt, bin);
-	chk->prv = nxt->off;
 }
 
 void			*bin_alloc(t_bin *bin, size_t sz, size_t align)
@@ -49,7 +53,7 @@ void			*bin_alloc(t_bin *bin, size_t sz, size_t align)
 		chunk_nxt(chk, bin)->prv = chk->off;
 		chunk_prv(chk, bin)->nxt = chk->off;
 	}
-	if (chunk_size(chk) > sz + sizeof(t_chunk))
+	if (chunk_size(chk) >= sz + sizeof(t_chunk))
 		trim(bin, chk, sz);
 	chk->rfc = 1;
 	chk->lrg = 0;
@@ -80,7 +84,7 @@ int				bin_resize(t_bin *bin, t_chunk *chk, size_t nsz)
 			chsz = chunk_size(chk);
 		}
 	}
-	if (!ret && chsz > nsz + sizeof(t_chunk))
+	if (!ret && chsz > nsz)
 		trim(bin, chk, nsz);
 	return (ret);
 }

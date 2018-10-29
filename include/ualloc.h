@@ -104,6 +104,16 @@ extern void				*urealloc(t_upool pool, void *ptr, size_t sz);
 /*
 ** Re-allocate `ptr` memory pointer to `sz` zeroed memory.
 ** @param pool    [in] Memory pool to use (`g_uscope` if `NULL`)
+** @param p       [in] Memory pointer to re-allocate
+** @param num     [in] Number of element to allocate
+** @param sz      [in] Re-allocation size in bytes
+** @return             Begin of the new memory on success, `NULL` otherwise
+*/
+extern void				*ucrealloc(t_upool pool, void *p, size_t n, size_t sz);
+
+/*
+** Re-allocate `ptr` memory pointer to `sz` zeroed memory.
+** @param pool    [in] Memory pool to use (`g_uscope` if `NULL`)
 ** @param ptr     [in] Memory pointer to re-allocate
 ** @param sz      [in] Re-allocation size in bytes
 ** @return             Begin of the new memory on success, `NULL` otherwise
@@ -113,6 +123,7 @@ extern void				*uzrealloc(t_upool pool, void *ptr, size_t sz);
 /*
 ** Reference a memory pointer, once referenced 'n' time, `ufree` have to be
 ** called 'n+1' times to release the memory.
+** @param pool    [in] Memory pool to use (`g_uscope` if `NULL`)
 ** @param ptr     [in] Memory pointer to reference
 ** @return             0 on success, -1 with errno set otherwise
 */
@@ -120,15 +131,23 @@ extern int				uref(t_upool pool, void *ptr);
 
 /*
 ** Un-reference a memory pointer.
+** @param pool    [in] Memory pool to use (`g_uscope` if `NULL`)
 ** @param ptr     [in] Memory pointer to un-reference
 */
 extern void				ufree(t_upool pool, void *ptr);
 
 /*
 ** Retrieve the memory pointer size.
+** @param pool    [in] Memory pool to use (`g_uscope` if `NULL`)
 ** @param ptr     [in] Memory pointer
 ** @return             Pointer total size
 */
 extern size_t			usize(t_upool pool, void *ptr);
+
+/*
+** Dump a memory pool to stdout
+** @param pool    [in] Memory pool to use (`g_uscope` if `NULL`)
+*/
+extern void				udump(t_upool pool);
 
 #endif

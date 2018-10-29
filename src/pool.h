@@ -48,7 +48,8 @@ typedef struct		s_pool
 	pthread_mutex_t	lock;
 }					t_pool;
 
+t_pool				g_heap_dft_stack;
+
 void				*unlocked_ualloc(t_pool *pool, size_t sz, size_t al);
-void				pool_dump(t_pool *pool);
 
 #endif

@@ -84,17 +84,18 @@ macro(wow NAME)
 endmacro()
 
 wow(ft_malloc
-  ${__SRC_DIR}/class.c
-  ${__SRC_DIR}/pool.c
-  ${__SRC_DIR}/chunk.c
-  ${__SRC_DIR}/scope.c
-  ${__SRC_DIR}/bin.c
-  ${__SRC_DIR}/bin_dyn.c
-  ${__SRC_DIR}/ufree.c
-  ${__SRC_DIR}/urealloc.c
-  ${__SRC_DIR}/bin_lookup.c
-  ${__SRC_DIR}/malloc.c
-  ${__SRC_DIR}/ualloc.c)
+  src/bin.c
+  src/bin_dyn.c
+  src/bin_lookup.c
+  src/chunk.c
+  src/class.c
+  src/malloc_2.c
+  src/malloc.c
+  src/pool.c
+  src/scope.c
+  src/ualloc.c
+  src/ufree.c
+  src/urealloc.c)
 
 add_executable(wow test/wow.c)
 target_link_libraries(wow PUBLIC ft_malloc)

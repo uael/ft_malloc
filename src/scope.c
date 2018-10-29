@@ -16,6 +16,8 @@
 
 int		upush(t_upool pool)
 {
+	if (pool->prev || pool == &g_heap_dft_stack)
+		return (-(errno = EINVAL));
 	pool->prev = g_uscope;
 	g_uscope = pool;
 	return (0);
