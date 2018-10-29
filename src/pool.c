@@ -48,6 +48,7 @@ static void				stack_init(t_pool *pool, void *mem, size_t sz)
 	t_bin		*bin;
 	uint16_t	tail;
 
+	pool->prev = NULL;
 	pool->def.stack.bin = mem;
 	bin = pool->def.stack.bin;
 	*bin = (t_bin){

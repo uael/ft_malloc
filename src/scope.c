@@ -25,9 +25,12 @@ int		upush(t_upool pool)
 
 int		upop(void)
 {
+	t_upool pool;
+
 	if (!g_uscope->prev)
 		return (-(errno = EINVAL));
-	urelease(g_uscope);
-	g_uscope = g_uscope->prev;
+	pool = g_uscope;
+	g_uscope = pool->prev;
+	urelease(pool);
 	return (0);
 }

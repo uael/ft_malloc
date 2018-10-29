@@ -75,6 +75,7 @@ int main(int ac, char *av[])
 	udump(pool2);
 	ft_printf("\n");
 
+	assert(0 == upush(pool1));
 	{
 		int *inta = NULL;
 
@@ -101,6 +102,65 @@ int main(int ac, char *av[])
 			ft_printf("[%u] = %d\n", i, inta[i]);
 		}
 	}
+	assert(0 == upop());
+
+	assert(0 == upush(pool1));
+	{
+		int *inta = NULL;
+
+		inta = ucrealloc(NULL, inta, 5, sizeof(int));
+		assert(usize(NULL, inta) == (((5 * sizeof(int)) + 7) & -8));
+
+		for (unsigned i = 0; i < 5; ++i) {
+			inta[i] = -i;
+			ft_printf("[%u] = %d\n", i, inta[i]);
+		}
+
+		inta = ucrealloc(NULL, inta, 3, sizeof(int));
+		assert(usize(NULL, inta) == (((3 * sizeof(int)) + 7) & -8));
+
+		for (unsigned i = 0; i < 3; ++i) {
+			ft_printf("[%u] = %d\n", i, inta[i]);
+		}
+
+		inta = ucrealloc(NULL, inta, 12, sizeof(int));
+		assert(usize(NULL, inta) == (((12 * sizeof(int)) + 7) & -8));
+
+		for (unsigned i = 0; i < 12; ++i) {
+			if (i >= 3) inta[i] = -i;
+			ft_printf("[%u] = %d\n", i, inta[i]);
+		}
+	}
+	assert(0 == upop());
+
+	assert(0 == upush(pool1));
+	{
+		int *inta = NULL;
+
+		inta = ucrealloc(NULL, inta, 5, sizeof(int));
+		assert(usize(NULL, inta) == (((5 * sizeof(int)) + 7) & -8));
+
+		for (unsigned i = 0; i < 5; ++i) {
+			inta[i] = -i;
+			ft_printf("[%u] = %d\n", i, inta[i]);
+		}
+
+		inta = ucrealloc(NULL, inta, 3, sizeof(int));
+		assert(usize(NULL, inta) == (((3 * sizeof(int)) + 7) & -8));
+
+		for (unsigned i = 0; i < 3; ++i) {
+			ft_printf("[%u] = %d\n", i, inta[i]);
+		}
+
+		inta = ucrealloc(NULL, inta, 12, sizeof(int));
+		assert(usize(NULL, inta) == (((12 * sizeof(int)) + 7) & -8));
+
+		for (unsigned i = 0; i < 12; ++i) {
+			if (i >= 3) inta[i] = -i;
+			ft_printf("[%u] = %d\n", i, inta[i]);
+		}
+	}
+	assert(0 == upop());
 
 	return 0;
 }
