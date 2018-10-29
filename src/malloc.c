@@ -26,9 +26,9 @@ void	*memalign(size_t alignment, size_t size)
 {
 	void *ptr;
 
-	pthread_mutex_lock(&g_heap_dft->lock);
-	ptr = unlocked_ualloc(g_heap_dft, size, alignment);
-	pthread_mutex_unlock(&g_heap_dft->lock);
+	pthread_mutex_lock(&g_uscope->lock);
+	ptr = unlocked_ualloc(g_uscope, size, alignment);
+	pthread_mutex_unlock(&g_uscope->lock);
 	return (ptr);
 }
 
@@ -109,5 +109,5 @@ void pool_dump(t_pool *pool)
 
 void	show_alloc_mem(void)
 {
-	pool_dump(g_heap_dft);
+	pool_dump(g_uscope);
 }

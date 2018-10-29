@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pool.h                                             :+:      :+:    :+:   */
+/*   scope.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,45 +10,22 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef POOL_H
-# define POOL_H
+#include "pool.h"
 
-# include "bin.h"
+#include <errno.h>
 
-enum				e_pool
+int		upush(t_upool pool)
 {
-	POOL_NONE = 0,
-	POOL_STACK,
-	POOL_HEAP,
-};
+	pool->prev = g_uscope;
+	g_uscope = pool;
+	return (0);
+}
 
-struct				s_stack
+int		upop(void)
 {
-	t_bin			*bin;
-};
-
-struct				s_heap
-{
-	t_bin			*bins_tiny;
-	t_bin			*bins_small;
-	t_bin			*bins_large;
-};
-
-union				u_pool
-{
-	struct s_stack	stack;
-	struct s_heap	heap;
-};
-
-typedef struct		s_pool
-{
-	struct s_pool	*prev;
-	enum e_pool		kind;
-	union u_pool	def;
-	pthread_mutex_t	lock;
-}					t_pool;
-
-void				*unlocked_ualloc(t_pool *pool, size_t sz, size_t al);
-void				pool_dump(t_pool *pool);
-
-#endif
+	if (!g_uscope->prev)
+		return (-(errno = EINVAL));
+	urelease(g_uscope);
+	g_uscope = g_uscope->prev;
+	return (0);
+}

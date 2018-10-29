@@ -23,7 +23,7 @@ int			uref(t_pool *pool, void *ptr)
 	if (!ptr || (size_t)ptr % sizeof(t_chunk))
 		return (0);
 	if (!pool)
-		pool = g_heap_dft;
+		pool = g_uscope;
 	ret = -1;
 	pthread_mutex_lock(&pool->lock);
 	if ((chk = bin_lookup(pool, ptr, &bin)) && chk->rfc)
@@ -43,7 +43,7 @@ void		ufree(t_pool *pool, void *ptr)
 	if (!ptr || (size_t)ptr % sizeof(t_chunk))
 		return ;
 	if (!pool)
-		pool = g_heap_dft;
+		pool = g_uscope;
 	pthread_mutex_lock(&pool->lock);
 	if ((chk = bin_lookup(pool, ptr, &bin)))
 		bin_free(bin, chk);
@@ -59,7 +59,7 @@ size_t		usize(t_pool *pool, void *ptr)
 	if (!ptr || (size_t)ptr % sizeof(t_chunk))
 		return (0);
 	if (!pool)
-		pool = g_heap_dft;
+		pool = g_uscope;
 	ret = 0;
 	pthread_mutex_lock(&pool->lock);
 	if ((chk = bin_lookup(pool, ptr, &bin)))

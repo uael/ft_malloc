@@ -87,6 +87,7 @@ wow(ft_malloc
   ${__SRC_DIR}/class.c
   ${__SRC_DIR}/pool.c
   ${__SRC_DIR}/chunk.c
+  ${__SRC_DIR}/scope.c
   ${__SRC_DIR}/bin.c
   ${__SRC_DIR}/bin_dyn.c
   ${__SRC_DIR}/ufree.c

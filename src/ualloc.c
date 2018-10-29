@@ -39,7 +39,7 @@ void		*ualloc(t_pool *pool, size_t sz)
 	if (!sz)
 		return (NULL);
 	if (!pool)
-		pool = g_heap_dft;
+		pool = g_uscope;
 	else if (pool->kind == POOL_NONE)
 	{
 		errno = EINVAL;

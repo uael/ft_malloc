@@ -13,12 +13,13 @@
 #include "pool.h"
 
 #include <errno.h>
+#include <libft/str.h>
 
 static t_pool			g_pools[MAX_POOL];
 static t_pool			g_heap_dft_stack = { .kind = POOL_HEAP };
 static pthread_mutex_t	g_pool_lock = PTHREAD_MUTEX_INITIALIZER;
 
-t_pool					*g_heap_dft = &g_heap_dft_stack;
+t_pool					*g_uscope = &g_heap_dft_stack;
 
 static t_pool			*pool_slot(enum e_pool kind)
 {
@@ -35,6 +36,7 @@ static t_pool			*pool_slot(enum e_pool kind)
 		return (NULL);
 	}
 	pool = g_pools + i;
+	ft_memset(pool, 0, sizeof(t_pool));
 	pool->kind = kind;
 	pthread_mutex_init(&pool->lock, NULL);
 	pthread_mutex_unlock(&g_pool_lock);
@@ -100,10 +102,10 @@ int						urelease(t_upool pool)
 	pool->def.heap.bins_small = NULL;
 	bin_dyfreeall(pool->def.heap.bins_large);
 	pool->def.heap.bins_large = NULL;
-	if (pool != g_heap_dft)
+	if (pool != &g_heap_dft_stack)
 		pool->kind = POOL_NONE;
 	pthread_mutex_unlock(mutex);
-	if (pool != g_heap_dft)
+	if (pool != &g_heap_dft_stack)
 		pthread_mutex_destroy(mutex);
 	return (0);
 }

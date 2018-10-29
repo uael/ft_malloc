@@ -47,7 +47,7 @@ void		*urealloc(t_pool *pool, void *ptr, size_t sz)
 	if (!ptr)
 		return (ualloc(pool, sz));
 	if (!pool)
-		pool = g_heap_dft;
+		pool = g_uscope;
 	pthread_mutex_lock(&pool->lock);
 	nptr = unlocked_urealloc(pool, ptr, sz, 0);
 	pthread_mutex_unlock(&pool->lock);
@@ -63,7 +63,7 @@ void		*uzrealloc(t_upool pool, void *ptr, size_t sz)
 	if (!ptr)
 		return (ualloc(pool, sz));
 	if (!pool)
-		pool = g_heap_dft;
+		pool = g_uscope;
 	pthread_mutex_lock(&pool->lock);
 	nptr = unlocked_urealloc(pool, ptr, sz, 1);
 	pthread_mutex_unlock(&pool->lock);

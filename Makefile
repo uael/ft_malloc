@@ -39,7 +39,7 @@ ifneq ($(DEBUG),)
   endif
 else
   CONFIG = release
-  CFLAGS += -flto -O3 -Wall -Werror -Wextra
+  CFLAGS += -flto -Ofast -Wall -Werror -Wextra
   LDFLAGS += -flto
 endif
 

@@ -8,3 +8,4 @@ SRC += src/ualloc.c
 SRC += src/ufree.c
 SRC += src/urealloc.c
 SRC += src/malloc.c
+SRC += src/scope.c
