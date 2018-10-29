@@ -90,6 +90,8 @@ wow(ft_malloc
   ${__SRC_DIR}/bin.c
   ${__SRC_DIR}/bin_dyn.c
   ${__SRC_DIR}/ufree.c
+  ${__SRC_DIR}/urealloc.c
+  ${__SRC_DIR}/bin_lookup.c
   ${__SRC_DIR}/malloc.c
   ${__SRC_DIR}/ualloc.c)
 

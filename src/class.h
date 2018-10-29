@@ -15,9 +15,9 @@
 
 # include "ualloc.h"
 
-# define MAX_BIN   (1 << 8)
 # define MAX_POOL  (1 << 8)
 # define MIN_ALLOC (1 << 7)
+# define ALIGN     (sizeof(t_chunk))
 
 /*
 ** Allocation size classes definition
@@ -27,7 +27,6 @@
 
 enum	e_class
 {
-	CLASS_ALL   = 0x01,
 	CLASS_TINY  = 0x06,
 	CLASS_SMALL = 0x09,
 	CLASS_LARGE = 0x10,

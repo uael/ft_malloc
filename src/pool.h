@@ -15,7 +15,7 @@
 
 # include "bin.h"
 
-enum	e_pool
+enum				e_pool
 {
 	POOL_NONE = 0,
 	POOL_STACK,
@@ -46,5 +46,8 @@ typedef struct		s_pool
 	union u_pool	def;
 	pthread_mutex_t	lock;
 }					t_pool;
+
+void				*unlocked_ualloc(t_pool *pool, size_t sz, size_t al);
+void				pool_dump(t_pool *pool);
 
 #endif

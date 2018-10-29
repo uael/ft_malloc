@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ufree.c                                            :+:      :+:    :+:   */
+/*   urealloc.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alucas- <alucas-@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -13,58 +13,59 @@
 #include "pool.h"
 
 #include <errno.h>
+#include <libft.h>
 
-int			uref(t_pool *pool, void *ptr)
+static void	*unlocked_urealloc(t_pool *pool, void *ptr, size_t sz, int zero)
 {
 	t_chunk	*chk;
 	t_bin	*bin;
-	int		ret;
+	void	*nptr;
+	size_t	psz;
 
-	if (!ptr || (size_t)ptr % sizeof(t_chunk))
-		return (0);
-	if (!pool)
-		pool = g_heap_dft;
-	ret = -1;
-	pthread_mutex_lock(&pool->lock);
-	if ((chk = bin_lookup(pool, ptr, &bin)) && chk->rfc)
+	if (!(chk = bin_lookup(pool, ptr, &bin)))
+		return (NULL);
+	if (!bin_resize(bin, chk, sz))
+		return (ptr);
+	psz = chk->lrg ? bin->size - sizeof(t_bin) - sizeof(t_chunk)
+				   : chunk_size(chk);
+	if ((nptr = unlocked_ualloc(pool, sz, ALIGN)))
 	{
-		++chk->rfc;
-		ret = 0;
-	}
-	pthread_mutex_unlock(&pool->lock);
-	return (ret);
-}
-
-void		ufree(t_pool *pool, void *ptr)
-{
-	t_chunk	*chk;
-	t_bin	*bin;
-
-	if (!ptr || (size_t)ptr % sizeof(t_chunk))
-		return ;
-	if (!pool)
-		pool = g_heap_dft;
-	pthread_mutex_lock(&pool->lock);
-	if ((chk = bin_lookup(pool, ptr, &bin)))
+		ft_memcpy(nptr, (void *)chunk_mem(chk), psz < sz ? psz : sz);
+		if (zero && sz > psz)
+			ft_memset(nptr + psz, 0, sz - psz);
 		bin_free(bin, chk);
-	pthread_mutex_unlock(&pool->lock);
+	}
+	return (nptr);
 }
 
-size_t		usize(t_pool *pool, void *ptr)
+void		*urealloc(t_pool *pool, void *ptr, size_t sz)
 {
-	t_chunk	*chk;
-	t_bin	*bin;
-	size_t	ret;
+	void	*nptr;
 
-	if (!ptr || (size_t)ptr % sizeof(t_chunk))
-		return (0);
+	if (!sz)
+		return (NULL);
+	if (!ptr)
+		return (ualloc(pool, sz));
 	if (!pool)
 		pool = g_heap_dft;
-	ret = 0;
 	pthread_mutex_lock(&pool->lock);
-	if ((chk = bin_lookup(pool, ptr, &bin)))
-		ret = chk->lrg ? bin->size - sizeof(t_bin) - sizeof(t_chunk)
-					   : chunk_size(chk);
+	nptr = unlocked_urealloc(pool, ptr, sz, 0);
 	pthread_mutex_unlock(&pool->lock);
-	return (ret);
+	return (nptr);
+}
+
+void		*uzrealloc(t_upool pool, void *ptr, size_t sz)
+{
+	void	*nptr;
+
+	if (!sz)
+		return (NULL);
+	if (!ptr)
+		return (ualloc(pool, sz));
+	if (!pool)
+		pool = g_heap_dft;
+	pthread_mutex_lock(&pool->lock);
+	nptr = unlocked_urealloc(pool, ptr, sz, 1);
+	pthread_mutex_unlock(&pool->lock);
+	return (nptr);
 }

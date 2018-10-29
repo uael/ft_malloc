@@ -30,13 +30,12 @@ typedef struct		s_bin
 	size_t			size;
 }					t_bin;
 
-void				*bin_dyn_alloc(t_bin **pbin, enum e_class cl, size_t sz);
-void				bin_dyn_free(t_bin *bin);
-void				bin_dyn_freeall(t_bin *bin);
-
-void				*bin_flat_alloc(t_bin *bin, size_t sz);
+void				*bin_dyalloc(t_bin **p, enum e_class c, size_t s, size_t a);
+void				bin_dyfree(t_bin *bin);
+void				bin_dyfreeall(t_bin *bin);
+void				*bin_alloc(t_bin *bin, size_t sz, size_t align);
 void				bin_free(t_bin *bin, t_chunk *chk);
 int					bin_resize(t_bin *bin, t_chunk *chk, size_t nsz);
-t_chunk				*bin_find(struct s_pool *pool, void *ptr, t_bin **pbin);
+t_chunk				*bin_lookup(struct s_pool *pool, void *ptr, t_bin **pbin);
 
 #endif

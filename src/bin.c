@@ -15,20 +15,6 @@
 # include <errno.h>
 # include <sys/mman.h>
 
-static t_chunk	*find_free(t_bin *bin, size_t sz)
-{
-	t_chunk	*chk;
-
-	chk = bin->head;
-	while (chk->rfc || chunk_size(chk) < sz)
-	{
-		if (chk->nxt == bin->tail->off)
-			return NULL;
-		chk = chunk_nxt(chk, bin);
-	}
-	return (chk);
-}
-
 static void		trim(t_bin *bin, t_chunk *chk, size_t sz)
 {
 	t_chunk	*nxt;
@@ -41,50 +27,33 @@ static void		trim(t_bin *bin, t_chunk *chk, size_t sz)
 	chk->prv = nxt->off;
 }
 
-void			*bin_flat_alloc(t_bin *bin, size_t sz)
+void			*bin_alloc(t_bin *bin, size_t sz, size_t align)
 {
 	t_chunk	*chk;
-	void	*ptr;
 
-	ptr = NULL;
-	sz = (sz + sizeof(t_chunk) - 1) & -sizeof(t_chunk);
-	if ((chk = find_free(bin, sz)))
+	sz = (sz + ALIGN - 1) & -ALIGN;
+	chk = bin->head;
+	while (chk->rfc || (chunk_size(chk) - (chunk_mem(chk) % align)) < sz)
 	{
-		if (chunk_size(chk) > sz + sizeof(t_chunk))
-			trim(bin, chk, sz);
-		chk->rfc = 1;
-		chk->lrg = 0;
-		ptr = (void *)chunk_mem(chk);
+		if (chk->nxt == bin->tail->off)
+			return (NULL);
+		chk = chunk_nxt(chk, bin);
 	}
-	return (ptr);
-}
-
-void			bin_free(t_bin *bin, t_chunk *chk)
-{
-	t_chunk	*prv;
-	t_chunk	*nxt;
-
-	if (!chk->rfc)
-		return;
-	if (!--chk->rfc)
+	if ((chunk_mem(chk) % align))
 	{
-		if (!chk->lrg)
+		while (chunk_mem(chk) % align)
 		{
-			prv = chunk_prv(chk, bin);
-			nxt = chunk_nxt(chk, bin);
-			if ((prv != chk && !prv->rfc) || !nxt->rfc)
-			{
-				if (!nxt->rfc)
-					nxt = chunk_nxt(nxt, bin);
-				if (!prv->rfc)
-					chk = prv;
-				chk->nxt = nxt->off;
-				nxt->prv = chk->off;
-			}
+			++chk;
+			++chk->off;
 		}
-		if (chk->lrg || bin->head->nxt == bin->tail->off)
-			bin_dyn_free(bin);
+		chunk_nxt(chk, bin)->prv = chk->off;
+		chunk_prv(chk, bin)->nxt = chk->off;
 	}
+	if (chunk_size(chk) > sz + sizeof(t_chunk))
+		trim(bin, chk, sz);
+	chk->rfc = 1;
+	chk->lrg = 0;
+	return ((void *)chunk_mem(chk));
 }
 
 int				bin_resize(t_bin *bin, t_chunk *chk, size_t nsz)
@@ -97,7 +66,7 @@ int				bin_resize(t_bin *bin, t_chunk *chk, size_t nsz)
 		return (-1);
 	ret = 0;
 	chsz = chunk_size(chk);
-	nsz = (nsz + sizeof(t_chunk) - 1) & -sizeof(t_chunk);
+	nsz = (nsz + ALIGN - 1) & -ALIGN;
 	if (chsz < nsz)
 	{
 		nxt = chunk_nxt(chk, bin);

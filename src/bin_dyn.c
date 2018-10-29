@@ -15,8 +15,8 @@
 # include <errno.h>
 # include <sys/mman.h>
 
-static int		bin_mmap(t_bin **pbin, t_bin **bhd,
-								 enum e_class class, size_t sz)
+static int	bin_mmap(t_bin **pbin, t_bin **bhd,
+	enum e_class class, size_t sz)
 {
 	void		*mem;
 	t_bin		*bin;
@@ -30,7 +30,7 @@ static int		bin_mmap(t_bin **pbin, t_bin **bhd,
 	if (mem == MAP_FAILED)
 	{
 		*pbin = NULL;
-		return (-1);
+		return (-errno);
 	}
 	*pbin = mem;
 	bin = *pbin;
@@ -48,33 +48,33 @@ static int		bin_mmap(t_bin **pbin, t_bin **bhd,
 	return 0;
 }
 
-void			*bin_dyn_alloc(t_bin **pbin, enum e_class cl, size_t sz)
+void		*bin_dyalloc(t_bin **p, enum e_class c, size_t s, size_t a)
 {
 	void	*ptr;
 	t_bin	*prev;
 	t_bin	**bhd;
 
-	bhd = pbin;
+	bhd = p;
 	prev = NULL;
 	while (1)
-		if (!*pbin)
+		if (!*p)
 		{
-			if (bin_mmap(pbin, bhd, cl, sz))
+			if (bin_mmap(p, bhd, c, s))
 				return (NULL);
-			(*pbin)->prev = prev;
-			return (cl == CLASS_LARGE
-				? (*pbin)->head + 1 : bin_flat_alloc(*pbin, sz));
+			(*p)->prev = prev;
+			return (c == CLASS_LARGE
+				? (*p)->head + 1 : bin_alloc(*p, s, a));
 		}
-		else if (cl != CLASS_LARGE && (ptr = bin_flat_alloc(*pbin, sz)))
+		else if (c != CLASS_LARGE && (ptr = bin_alloc(*p, s, a)))
 			return (ptr);
 		else
 		{
-			prev = *pbin;
-			pbin = &(*pbin)->next;
+			prev = *p;
+			p = &(*p)->next;
 		}
 }
 
-void			bin_dyn_free(t_bin *bin)
+void		bin_dyfree(t_bin *bin)
 {
 	if (bin->prev)
 		bin->prev->next = bin->next;
@@ -85,64 +85,38 @@ void			bin_dyn_free(t_bin *bin)
 	munmap(bin, bin->size);
 }
 
-void			bin_dyn_freeall(t_bin *bin)
+void		bin_dyfreeall(t_bin *bin)
 {
 	t_bin *next;
 
 	if (!bin)
 		return;
 	next = bin->next;
-	bin_dyn_free(bin);
-	return (bin_dyn_freeall(next));
+	bin_dyfree(bin);
+	return (bin_dyfreeall(next));
 }
 
-static t_chunk	*find_alloc(t_bin *bin, uintptr_t ptr, t_bin **pbin)
+void		bin_free(t_bin *bin, t_chunk *chk)
 {
-	t_chunk	*chk;
+	t_chunk	*prv;
+	t_chunk	*nxt;
 
-	chk = bin->head;
-	while (1)
+	if (!chk->rfc || --chk->rfc)
+		return;
+	if (!chk->lrg)
 	{
-		if (chunk_mem(chk) >= ptr && ptr < (uintptr_t)chunk_nxt(chk, bin))
+		prv = chunk_prv(chk, bin);
+		nxt = chunk_nxt(chk, bin);
+		if ((prv != chk && !prv->rfc) || !nxt->rfc)
 		{
-			*pbin = bin;
-			return (chk);
+			if (!nxt->rfc)
+				nxt = chunk_nxt(nxt, bin);
+			if (!prv->rfc)
+				chk = prv;
+			chk->nxt = nxt->off;
+			nxt->prv = chk->off;
 		}
-		if (chk->nxt == bin->tail->off)
-			break;
-		chk = chunk_nxt(chk, bin);
 	}
-	return (NULL);
-}
-
-t_chunk			*bin_fnd(int lrg, t_bin *bin, uintptr_t ptr, t_bin **pbin)
-{
-	while (1)
-	{
-		if (!bin)
-			return (NULL);
-		if (ptr >= (uintptr_t)bin && ptr <= ((uintptr_t)bin + bin->size))
-		{
-			if (lrg)
-			{
-				*pbin = bin;
-				return (bin->head);
-			}
-			return (find_alloc(bin, ptr, pbin));
-		}
-		bin = bin->next;
-	}
-}
-
-t_chunk			*bin_find(struct s_pool *pool, void *ptr, t_bin **pbin)
-{
-	t_chunk *chk;
-
-	if (pool->kind == POOL_STACK)
-		return (bin_fnd(0, pool->def.stack.bin, (uintptr_t)ptr, pbin));
-	if ((chk = bin_fnd(0, pool->def.heap.bins_tiny, (uintptr_t)ptr, pbin)))
-		return (chk);
-	if ((chk = bin_fnd(0, pool->def.heap.bins_small, (uintptr_t)ptr, pbin)))
-		return (chk);
-	return (bin_fnd(1, pool->def.heap.bins_large, (uintptr_t)ptr, pbin));
+	if (bin->bhd && (chk->lrg || bin->head->nxt == bin->tail->off))
+		bin_dyfree(bin);
 }

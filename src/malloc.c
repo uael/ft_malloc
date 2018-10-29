@@ -22,6 +22,16 @@ void	free(void *ptr)
 	ufree(NULL, ptr);
 }
 
+void	*memalign(size_t alignment, size_t size)
+{
+	void *ptr;
+
+	pthread_mutex_lock(&g_heap_dft->lock);
+	ptr = unlocked_ualloc(g_heap_dft, size, alignment);
+	pthread_mutex_unlock(&g_heap_dft->lock);
+	return (ptr);
+}
+
 void	*malloc(size_t sz)
 {
 	return (ualloc(NULL, sz));
@@ -48,52 +58,56 @@ void	*calloc(size_t nb, size_t sz)
 	return (ucalloc(NULL, nb, sz));
 }
 
-void	*valloc(size_t sz)
+static size_t dump(t_pool *pool, t_bin *bin, t_chunk *chunk, int i)
 {
-	return (ualloc(NULL, sz));
-}
-
-static void dump(t_pool *pool, t_stream *f, t_bin *bin, t_chunk *chunk, int i)
-{
-	if (!chunk) return;
-
-	assert(bin == chunk_bin(chunk));
+	size_t c;
 
 	if (i == 0)
 	{
-		ft_fprintf(f, "         (%6u) |%p -> %p|\n",
-				   bin->size, bin, bin + bin->size);
+		chunk = bin->head;
+		if (pool->kind != POOL_STACK)
+			ft_printf( "         (%6u) |%p -> %p|\n",
+				bin->size, bin, bin + bin->size);
 	}
-
-	ft_fprintf(f, "%.3d: [%c] (%6u) |%p -> %p|\n",
-			   i, chunk->rfc ? 'X' : ' ',
-			   usize(pool, (void *)chunk_mem(chunk)), chunk, bin->head + chunk->nxt);
+	c = usize(pool, (void *)chunk_mem(chunk));
+	ft_printf("%.3d: [%c] (%6u) |%p -> %p|\n",
+		i, chunk->rfc ? 'X' : ' ', c, chunk_mem(chunk), bin->head + chunk->nxt);
+	if (!chunk->rfc)
+		c = 0;
 	if (chunk->lrg)
-		return;
+		return (c);
 	if (chunk->nxt == bin->tail->off)
-	{
-		if (bin->next)
-			return dump(pool, f, bin->next, bin->next->head, 0);
-		return;
-	}
-	dump(pool, f, bin, bin->head + chunk->nxt, i + 1);
+		return bin->next ? c + dump(pool, bin->next, bin->next->head, 0) : c;
+	return (c + dump(pool, bin, bin->head + chunk->nxt, i + 1));
 }
 
-static void dump_pool(t_stream *f, t_pool *pool)
+void pool_dump(t_pool *pool)
 {
-	ft_fprintf(f, "-------------------- tiny  -----------------\n");
-	if (pool->def.heap.bins_tiny && pool->def.heap.bins_tiny->head)
-		dump(pool, f, pool->def.heap.bins_tiny, pool->def.heap.bins_tiny->head, 0);
-	ft_fprintf(f, "-------------------- small -----------------\n");
-	if (pool->def.heap.bins_small && pool->def.heap.bins_small->head)
-		dump(pool, f, pool->def.heap.bins_small, pool->def.heap.bins_small->head, 0);
-	ft_fprintf(f, "-------------------- large -----------------\n");
-	if (pool->def.heap.bins_large && pool->def.heap.bins_large->head)
-		dump(pool, f, pool->def.heap.bins_large, pool->def.heap.bins_large->head, 0);
-	ft_fprintf(f, "\n\n");
+	size_t c;
+
+	c = 0;
+	if (pool->kind == POOL_STACK)
+	{
+		ft_printf("-- ALL ---------------------------------------------\n");
+		if (pool->def.stack.bin && pool->def.stack.bin->head)
+			c += dump(pool, pool->def.heap.bins_tiny, NULL, 0);
+	}
+	else
+	{
+		ft_printf("-- TINY --------------------------------------------\n");
+		if (pool->def.heap.bins_tiny && pool->def.heap.bins_tiny->head)
+			c += dump(pool, pool->def.heap.bins_tiny, NULL, 0);
+		ft_printf("-- SMALL -------------------------------------------\n");
+		if (pool->def.heap.bins_small && pool->def.heap.bins_small->head)
+			c += dump(pool, pool->def.heap.bins_small, NULL, 0);
+		ft_printf("-- LARGE -------------------------------------------\n");
+		if (pool->def.heap.bins_large && pool->def.heap.bins_large->head)
+			c += dump(pool, pool->def.heap.bins_large, NULL, 0);
+	}
+	ft_printf("-- TOTAL (%6zu) ----------------------------------\n", c);
 }
 
 void	show_alloc_mem(void)
 {
-	dump_pool(g_stdout, g_heap_dft);
+	pool_dump(g_heap_dft);
 }
