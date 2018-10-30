@@ -88,7 +88,6 @@ wow(ft_malloc
   src/bin_dyn.c
   src/bin_lookup.c
   src/chunk.c
-  src/class.c
   src/malloc_2.c
   src/malloc.c
   src/pool.c
@@ -104,7 +103,10 @@ add_executable(test0 test/test0.c)
 target_include_directories(test0 PRIVATE include)
 
 add_executable(test1 test/test1.c)
-target_include_directories(test1 PRIVATE include)
+target_link_libraries(test1 PUBLIC ft_malloc)
+
+add_executable(test2 test/test2.c)
+target_link_libraries(test2 PUBLIC ft_malloc)
 
 add_executable(test9 test/test9.c)
 target_link_libraries(test9 PUBLIC ft_malloc)

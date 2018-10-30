@@ -2,7 +2,6 @@ SRC += src/bin.c
 SRC += src/bin_dyn.c
 SRC += src/bin_lookup.c
 SRC += src/chunk.c
-SRC += src/class.c
 SRC += src/malloc_2.c
 SRC += src/malloc.c
 SRC += src/pool.c

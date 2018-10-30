@@ -22,6 +22,19 @@
 */
 typedef struct s_pool	*t_upool;
 
+struct					s_size_class
+{
+	size_t				page_size;
+	size_t				nb_pages;
+	size_t				min_size;
+};
+
+struct					s_uconf
+{
+	struct s_size_class	tiny;
+	struct s_size_class	small;
+};
+
 extern t_upool			g_uscope;
 
 /*
@@ -39,7 +52,7 @@ extern int				ustack(void *mem, size_t sz, t_upool *pool);
 ** @param pool   [out] Pointer to a new pool handle
 ** @return             0 on success, -1 with errno set otherwise
 */
-extern int				uheap(t_upool *pool);
+extern int				uheap(t_upool *pool, const struct s_uconf *conf);
 
 /*
 ** Release a memory pool.

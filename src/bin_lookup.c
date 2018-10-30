@@ -32,6 +32,8 @@ t_chunk			*lookup_one(int lrg, t_bin *bin, uintptr_t ptr, t_bin **pbin)
 					return (NULL);
 				chk = chunk_nxt(chk, bin);
 			}
+			if (!chk->rfc)
+				return (NULL);
 			*pbin = bin;
 			return (chk);
 		}

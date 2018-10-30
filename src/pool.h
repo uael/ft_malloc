@@ -15,6 +15,9 @@
 
 # include "bin.h"
 
+# define MAX_POOL   (1 << 8)
+# define ALIGN      (sizeof(t_chunk))
+
 enum				e_pool
 {
 	POOL_NONE = 0,
@@ -29,6 +32,7 @@ struct				s_stack
 
 struct				s_heap
 {
+	struct s_uconf	conf;
 	t_bin			*bins_tiny;
 	t_bin			*bins_small;
 	t_bin			*bins_large;
@@ -50,6 +54,7 @@ typedef struct		s_pool
 
 t_pool				g_heap_dft_stack;
 
+int					pool_lazy_init(t_pool *pool);
 void				*unlocked_ualloc(t_pool *pool, size_t sz, size_t al);
 
 #endif

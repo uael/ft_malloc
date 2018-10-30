@@ -16,15 +16,14 @@
 # include <sys/mman.h>
 
 static int	bin_mmap(t_bin **pbin, t_bin **bhd,
-	enum e_class class, size_t sz)
+	struct s_size_class *cl, size_t sz)
 {
 	void		*mem;
 	t_bin		*bin;
 	uint16_t	tail;
 
-	sz = class == CLASS_LARGE
-		? (sz + sizeof(t_bin) + (2 * sizeof(t_chunk)) - 1) & -sizeof(t_chunk)
-		: ((size_t)(1 << class) * MIN_ALLOC);
+	sz = cl ? (cl->page_size * (cl->nb_pages + 1))
+		: (sz + sizeof(t_bin) + (2 * sizeof(t_chunk)) - 1) & -sizeof(t_chunk);
 	mem = mmap(NULL, sz, PROT_READ | PROT_WRITE,
 		MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	if (mem == MAP_FAILED)
@@ -36,7 +35,7 @@ static int	bin_mmap(t_bin **pbin, t_bin **bhd,
 	bin = *pbin;
 	*bin = (t_bin){ .bhd = bhd, .size = sz };
 	bin->head = (t_chunk *)((t_bin *)mem + 1);
-	if (class == CLASS_LARGE)
+	if (!cl)
 		*bin->head = (t_chunk){ .lrg = 1, .rfc = 1 };
 	else
 	{
@@ -48,7 +47,7 @@ static int	bin_mmap(t_bin **pbin, t_bin **bhd,
 	return 0;
 }
 
-void		*bin_dyalloc(t_bin **p, enum e_class c, size_t s, size_t a)
+void		*bin_dyalloc(t_bin **p, struct s_size_class *cl, size_t s, size_t a)
 {
 	void	*ptr;
 	t_bin	*prev;
@@ -59,13 +58,12 @@ void		*bin_dyalloc(t_bin **p, enum e_class c, size_t s, size_t a)
 	while (1)
 		if (!*p)
 		{
-			if (bin_mmap(p, bhd, c, s))
+			if (bin_mmap(p, bhd, cl, s))
 				return (NULL);
 			(*p)->prev = prev;
-			return (c == CLASS_LARGE
-				? (*p)->head + 1 : bin_alloc(*p, s, a));
+			return (!cl ? (*p)->head + 1 : bin_alloc(*p, s, a));
 		}
-		else if (c != CLASS_LARGE && (ptr = bin_alloc(*p, s, a)))
+		else if (cl && (ptr = bin_alloc(*p, s, a)))
 			return (ptr);
 		else
 		{
@@ -117,6 +115,6 @@ void		bin_free(t_bin *bin, t_chunk *chk)
 			nxt->prv = chk->off;
 		}
 	}
-	if (bin->bhd && (chk->lrg || bin->head->nxt == bin->tail->off))
+	if (bin->bhd && chk->lrg)
 		bin_dyfree(bin);
 }

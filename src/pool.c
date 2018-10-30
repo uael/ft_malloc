@@ -13,12 +13,19 @@
 #include "pool.h"
 
 #include <errno.h>
+#include <unistd.h>
 #include <libft/str.h>
 
 static t_pool			g_pools[MAX_POOL];
 static pthread_mutex_t	g_pool_lock = PTHREAD_MUTEX_INITIALIZER;
 
-t_pool					g_heap_dft_stack = { .kind = POOL_HEAP };
+t_pool					g_heap_dft_stack = {
+	.kind = POOL_HEAP,
+	.def.heap.conf = {
+		.tiny = { .nb_pages = 1 },
+		.small = { .nb_pages = 4 },
+	}
+};
 t_pool					*g_uscope = &g_heap_dft_stack;
 
 static t_pool			*pool_slot(enum e_pool kind)
@@ -73,12 +80,16 @@ int						ustack(void *mem, size_t sz, t_pool **ppool)
 	return (0);
 }
 
-int						uheap(t_pool **ppool)
+int						uheap(t_pool **ppool, const struct s_uconf *conf)
 {
 	t_pool *pool;
 
 	if (!(pool = pool_slot(POOL_HEAP)))
 		return (-(errno = ENOMEM));
+	pool->def.heap.conf = conf ? *conf : (struct s_uconf){
+		.tiny = { .nb_pages = 1 },
+		.small = { .nb_pages = 4 },
+	};
 	*ppool = pool;
 	return (0);
 }

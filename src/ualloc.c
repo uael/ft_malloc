@@ -15,21 +15,51 @@
 #include <errno.h>
 #include <libft.h>
 
+int			pool_lazy_init(t_pool *pool)
+{
+	int				ret;
+	int				psz;
+	struct s_uconf	*cf;
+
+	if (pool->def.heap.conf.tiny.page_size
+		&& pool->def.heap.conf.small.page_size)
+		return (0);
+	ret = 0;
+	if ((psz = getpagesize()) < 0)
+		ret = psz;
+	else
+	{
+		cf = &pool->def.heap.conf;
+		!cf->tiny.page_size ? (cf->tiny.page_size = (size_t)psz) : 0;
+		!cf->tiny.nb_pages ? (cf->tiny.nb_pages = 1) : 0;
+		if (!cf->tiny.min_size)
+			cf->tiny.min_size = (cf->tiny.page_size * cf->tiny.nb_pages) / 4;
+		!cf->small.page_size ? (cf->small.page_size = (size_t)psz) : 0;
+		!cf->small.nb_pages ? (cf->small.nb_pages = 4) : 0;
+		if (!cf->small.min_size)
+			cf->small.min_size = (cf->small.page_size * cf->small.nb_pages) / 4;
+	}
+	return (ret);
+}
+
 void		*unlocked_ualloc(t_pool *pool, size_t sz, size_t al)
 {
-	enum e_class	class;
-	void			*ptr;
-
-	class = classof(sz);
+	if ((al % ALIGN) != 0)
+	{
+		errno = EINVAL;
+		return (NULL);
+	}
+	sz = (sz + ALIGN - 1) & -ALIGN;
 	if (pool->kind == POOL_STACK)
-		ptr = bin_alloc(pool->def.stack.bin, sz, al);
-	else if (class == CLASS_TINY)
-		ptr = bin_dyalloc(&pool->def.heap.bins_tiny, class, sz, al);
-	else if (class == CLASS_SMALL)
-		ptr = bin_dyalloc(&pool->def.heap.bins_small, class, sz, al);
-	else
-		ptr = bin_dyalloc(&pool->def.heap.bins_large, class, sz, al);
-	return (ptr);
+		return (bin_alloc(pool->def.stack.bin, sz, al));
+	pool_lazy_init(pool);
+	if (sz < pool->def.heap.conf.tiny.min_size)
+		return (bin_dyalloc(&pool->def.heap.bins_tiny,
+			&pool->def.heap.conf.tiny, sz, al));
+	if (sz < pool->def.heap.conf.small.min_size)
+		return (bin_dyalloc(&pool->def.heap.bins_small,
+			&pool->def.heap.conf.small, sz, al));
+	return (bin_dyalloc(&pool->def.heap.bins_large, NULL, sz, al));
 }
 
 void		*ualloc(t_pool *pool, size_t sz)

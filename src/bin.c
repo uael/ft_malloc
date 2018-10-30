@@ -35,7 +35,6 @@ void			*bin_alloc(t_bin *bin, size_t sz, size_t align)
 {
 	t_chunk	*chk;
 
-	sz = (sz + ALIGN - 1) & -ALIGN;
 	chk = bin->head;
 	while (chk->rfc || (chunk_size(chk) - (chunk_mem(chk) % align)) < sz)
 	{

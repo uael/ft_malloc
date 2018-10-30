@@ -26,7 +26,7 @@ int main(int ac, char *av[])
 	t_upool pool1, pool2;
 
 	assert(0 == ustack(g_mem, sizeof(g_mem), &pool1));
-	assert(0 == uheap(&pool2));
+	assert(0 == uheap(&pool2, NULL));
 
 	assert(0 == upush(pool1));
 	{
