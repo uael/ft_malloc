@@ -96,21 +96,5 @@ wow(ft_malloc
   src/ufree.c
   src/urealloc.c)
 
-add_executable(wow test/wow.c)
-target_link_libraries(wow PUBLIC ft_malloc)
-
-add_executable(test0 test/test0.c)
-target_include_directories(test0 PRIVATE include)
-
-add_executable(test1 test/test1.c)
-target_link_libraries(test1 PUBLIC ft_malloc)
-
-add_executable(test2 test/test2.c)
-target_link_libraries(test2 PUBLIC ft_malloc)
-
-add_executable(test9 test/test9.c)
-target_link_libraries(test9 PUBLIC ft_malloc)
-
-add_executable(test8 test/test8.c)
-target_link_libraries(test8 PUBLIC ft_malloc)
-
+add_executable(bonus test/bonus.c)
+target_link_libraries(bonus PUBLIC ft_malloc)

@@ -12,8 +12,8 @@
 
 #include "pool.h"
 
-# include <errno.h>
-# include <sys/mman.h>
+#include <errno.h>
+#include <sys/mman.h>
 
 static void		trim(t_bin *bin, t_chunk *chk, size_t sz)
 {

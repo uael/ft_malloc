@@ -12,8 +12,8 @@
 
 #include "pool.h"
 
-# include <errno.h>
-# include <sys/mman.h>
+#include <errno.h>
+#include <sys/mman.h>
 
 static int	bin_mmap(t_bin **pbin, t_bin **bhd,
 	struct s_size_class *cl, size_t sz)
@@ -27,10 +27,7 @@ static int	bin_mmap(t_bin **pbin, t_bin **bhd,
 	mem = mmap(NULL, sz, PROT_READ | PROT_WRITE,
 		MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	if (mem == MAP_FAILED)
-	{
-		*pbin = NULL;
 		return (-errno);
-	}
 	*pbin = mem;
 	bin = *pbin;
 	*bin = (t_bin){ .bhd = bhd, .size = sz };
@@ -44,7 +41,7 @@ static int	bin_mmap(t_bin **pbin, t_bin **bhd,
 		*bin->tail = (t_chunk){ .off = tail, .rfc = 1 };
 		*bin->head = (t_chunk){ .nxt = tail };
 	}
-	return 0;
+	return (0);
 }
 
 void		*bin_dyalloc(t_bin **p, struct s_size_class *cl, size_t s, size_t a)
@@ -88,7 +85,7 @@ void		bin_dyfreeall(t_bin *bin)
 	t_bin *next;
 
 	if (!bin)
-		return;
+		return ;
 	next = bin->next;
 	bin_dyfree(bin);
 	return (bin_dyfreeall(next));
@@ -100,7 +97,7 @@ void		bin_free(t_bin *bin, t_chunk *chk)
 	t_chunk	*nxt;
 
 	if (!chk->rfc || --chk->rfc)
-		return;
+		return ;
 	if (!chk->lrg)
 	{
 		prv = chunk_prv(chk, bin);

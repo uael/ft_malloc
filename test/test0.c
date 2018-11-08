@@ -1,13 +1,9 @@
-#ifdef CTRL
-# include <stdlib.h>
-#else
-# include "malloc.h"
-#endif
+#include <stdlib.h>
 
-int		main()
+int main()
 {
     int     i;
-    /* char    *addr; */
+    char    *addr;
 
     i = 0;
     while (i < 1024)

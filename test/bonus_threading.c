@@ -1,11 +1,7 @@
 #include <string.h>
-#ifdef CTRL
-# include <stdlib.h>
-#else
-# include "malloc.h"
-#endif
-
+#include <stdlib.h>
 #include <pthread.h>
+
 #define MAX_THREADS 100
 #define MAX_ALLOCS 100
 

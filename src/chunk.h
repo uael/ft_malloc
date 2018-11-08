@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef chunk_H
-# define chunk_H
+#ifndef CHUNK_H
+# define CHUNK_H
 
 # include <stddef.h>
 # include <stdint.h>

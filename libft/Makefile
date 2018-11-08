@@ -81,3 +81,7 @@ fclean: clean
 	@$(RM) -f $(TARGET_LIB)
 
 re: fclean all
+
+norm:
+	@norminette $(shell echo "{include,src}/**/**.[ch]") \
+	  $(shell echo "{include,src}/**.[ch]")

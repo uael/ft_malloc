@@ -43,8 +43,8 @@ void	*reallocf(void *ptr, size_t sz)
 	void *tmp;
 
 	tmp = realloc(ptr, sz);
-    if (tmp)
-    	return (tmp);
-    free(ptr);
-    return (NULL);
+	if (tmp)
+		return (tmp);
+	free(ptr);
+	return (NULL);
 }

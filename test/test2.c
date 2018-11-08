@@ -1,8 +1,4 @@
-#ifdef CTRL
-# include <stdlib.h>
-#else
-# include "malloc.h"
-#endif
+#include <stdlib.h>
 
 int		main()
 {

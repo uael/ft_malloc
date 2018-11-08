@@ -1,11 +1,6 @@
-#ifdef CTRL
-# include <stdlib.h>
-#else
-# include "malloc.h"
-# include "ualloc.h"
-#endif
+#include <stdlib.h>
 
-int		main()
+int main()
 {
     int     i;
     char    *addr;

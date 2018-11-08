@@ -63,8 +63,9 @@ size_t		usize(t_pool *pool, void *ptr)
 	ret = 0;
 	pthread_mutex_lock(&pool->lock);
 	if ((chk = bin_lookup(pool, ptr, &bin)))
-		ret = chk->lrg ? bin->size - sizeof(t_bin) - sizeof(t_chunk)
-					   : chunk_size(chk);
+		ret = chk->lrg
+			? bin->size - sizeof(t_bin) - sizeof(t_chunk)
+			: chunk_size(chk);
 	pthread_mutex_unlock(&pool->lock);
 	return (ret);
 }

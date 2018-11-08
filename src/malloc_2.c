@@ -28,7 +28,7 @@ static size_t	dump(t_pool *pool, t_bin *bin, t_chunk *chunk, int i)
 	{
 		chunk = bin->head;
 		if (pool->kind != POOL_STACK)
-			ft_printf( "         (%10u) |%p -> %p|\n",
+			ft_printf("         (%10u) |%p -> %p|\n",
 				bin->size, bin, bin + bin->size);
 	}
 	c = usize(pool, (void *)chunk_mem(chunk));
@@ -37,7 +37,7 @@ static size_t	dump(t_pool *pool, t_bin *bin, t_chunk *chunk, int i)
 	if (!chunk->rfc)
 		c = 0;
 	if (chunk->lrg || chunk->nxt == bin->tail->off)
-		return bin->next ? c + dump(pool, bin->next, bin->next->head, 0) : c;
+		return (bin->next ? c + dump(pool, bin->next, bin->next->head, 0) : c);
 	return (c + dump(pool, bin, bin->head + chunk->nxt, i + 1));
 }
 

@@ -13,7 +13,7 @@
 #ifndef BIN_H
 # define BIN_H
 
-#include <pthread.h>
+# include <pthread.h>
 
 # include "ualloc.h"
 # include "chunk.h"
@@ -29,7 +29,7 @@ typedef struct		s_bin
 }					t_bin;
 
 void				*bin_dyalloc(t_bin **pbin, struct s_size_class *class,
-								 size_t sz, size_t align);
+						size_t sz, size_t align);
 void				bin_dyfree(t_bin *bin);
 void				bin_dyfreeall(t_bin *bin);
 void				*bin_alloc(t_bin *bin, size_t sz, size_t align);

@@ -26,8 +26,9 @@ static void	*unlocked_urealloc(t_pool *pool, void *ptr, size_t sz, int zero)
 		return (NULL);
 	if (!bin_resize(bin, chk, sz))
 		return (ptr);
-	psz = chk->lrg ? bin->size - sizeof(t_bin) - sizeof(t_chunk)
-				   : chunk_size(chk);
+	psz = chk->lrg
+		? bin->size - sizeof(t_bin) - sizeof(t_chunk)
+		: chunk_size(chk);
 	if ((nptr = unlocked_ualloc(pool, sz, ALIGN)))
 	{
 		ft_memcpy(nptr, (void *)chunk_mem(chk), psz < sz ? psz : sz);
@@ -50,8 +51,9 @@ static void	*unlocked_ucrealloc(t_pool *pool, void *ptr, size_t n, size_t sz)
 	sz *= n;
 	if (!bin_resize(bin, chk, sz))
 		return (ptr);
-	psz = chk->lrg ? bin->size - sizeof(t_bin) - sizeof(t_chunk)
-				   : chunk_size(chk);
+	psz = chk->lrg
+		? bin->size - sizeof(t_bin) - sizeof(t_chunk)
+		: chunk_size(chk);
 	psz = (psz / n) * sz;
 	if ((nptr = unlocked_ualloc(pool, sz, ALIGN)))
 	{

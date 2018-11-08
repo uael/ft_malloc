@@ -44,6 +44,8 @@ int			pool_lazy_init(t_pool *pool)
 
 void		*unlocked_ualloc(t_pool *pool, size_t sz, size_t al)
 {
+	void *ptr;
+
 	if ((al % ALIGN) != 0)
 	{
 		errno = EINVAL;
@@ -54,12 +56,14 @@ void		*unlocked_ualloc(t_pool *pool, size_t sz, size_t al)
 		return (bin_alloc(pool->def.stack.bin, sz, al));
 	pool_lazy_init(pool);
 	if (sz < pool->def.heap.conf.tiny.min_size)
-		return (bin_dyalloc(&pool->def.heap.bins_tiny,
-			&pool->def.heap.conf.tiny, sz, al));
-	if (sz < pool->def.heap.conf.small.min_size)
-		return (bin_dyalloc(&pool->def.heap.bins_small,
-			&pool->def.heap.conf.small, sz, al));
-	return (bin_dyalloc(&pool->def.heap.bins_large, NULL, sz, al));
+		ptr = bin_dyalloc(&pool->def.heap.bins_tiny,
+			&pool->def.heap.conf.tiny, sz, al);
+	else if (sz < pool->def.heap.conf.small.min_size)
+		ptr = bin_dyalloc(&pool->def.heap.bins_small,
+			&pool->def.heap.conf.small, sz, al);
+	else
+		ptr = bin_dyalloc(&pool->def.heap.bins_large, NULL, sz, al);
+	return (ptr);
 }
 
 void		*ualloc(t_pool *pool, size_t sz)
